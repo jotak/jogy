@@ -6,8 +6,8 @@
 
 enum FramePosition
 {
-    FP_Fixed = 0,
-    FP_Floating
+    Fixed = 0,
+    Floating
 };
 
 class guiFrame : public guiContainer
@@ -32,9 +32,6 @@ public:
     bool isPointed() { return m_bIsPointed; };
     bool isFocused() { return m_bFocused; };
 
-    // Clone / init
-    virtual void init(FramePosition positionType, FrameFitBehavior widthFit, FrameFitBehavior heightFit, int iXOffset, int iYOffset, int iMaxWidth, int iMaxHeight, ITexture ** pMainTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl, IGeometryQuads * pGeometry, IStencilGeometry * pStencil);
-
     // Effect
     void addEffect(guiFrameEffect * pEffect);
     void activateEffect(u16 uEffectId);
@@ -51,8 +48,11 @@ public:
     void setMovable(bool bMovable) { m_bMovable = bMovable; };
     void centerOnScreen();
 
-    // Static default constructors
-    static guiFrame * createDefaultFrame(FrameFitBehavior widthFit, FrameFitBehavior heightFit, int width, int height, bool bAlpha, string sId);
+    // Builder
+    virtual guiFrame * build(ITexture ** pMainTexs);
+    guiFrame * withFramePositionType(FramePosition positionType) {
+    	m_PositionType = positionType; return this;
+    }
 
 protected:
     FramePosition m_PositionType;
@@ -64,9 +64,8 @@ protected:
     u8 m_uRetractBorder;
     float m_fRetractTimer;
     s8 m_iRetractState; // -2 => hidden ; -1 => hiding ; 1 => showing ; 2 => shown
-    IGeometryQuads * m_pStickGeo;
-    IGeometryQuads * m_pStickedGeo;
     int m_iStickX, m_iStickY;
+    bool m_bStickable;
     bool m_bSticked;
     bool m_bMovable;
 };

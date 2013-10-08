@@ -17,7 +17,7 @@ typedef long            s32;
 #include <list>
 //#include <tr1/unordered_map>
 //#include <tr1/memory>
-//#include <tr1/functional>
+#include <tr1/functional>
 //#include <tuple>
 
 //extern errno_t fopen_s(FILE ** pFile, const char * sFilename, const char * sMode);

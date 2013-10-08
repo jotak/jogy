@@ -18,9 +18,6 @@ public:
 };
 #pragma pack(pop)
 
-
-typedef Vertex (*ScreenTransform)(int, int);
-
 class IGeometry
 {
 public:
@@ -32,8 +29,6 @@ public:
     virtual void reload() = 0;
     virtual void reloadGmem() = 0;
     virtual IGeometry * clone() = 0;
-
-    static ScreenTransform screenTransform;
 };
 
 #endif

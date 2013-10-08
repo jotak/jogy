@@ -70,17 +70,11 @@ guiContainer::~guiContainer()
 }
 
 // -----------------------------------------------------------------
-// Name : init
+// Name : build
 // -----------------------------------------------------------------
-void guiContainer::init(FrameFitBehavior widthFit, FrameFitBehavior heightFit, int iXOffset, int iYOffset, int iMaxWidth, int iMaxHeight, ITexture ** pMainTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl, IGeometryQuads * pGeometry, IStencilGeometry * pStencil)
+guiContainer * guiContainer::build(ITexture ** pMainTexs)
 {
-    guiComponent::init(sCpntId, xPxl, yPxl, wPxl, hPxl, pGeometry);
-    m_iMaxWidth = iMaxWidth;
-    m_iMaxHeight = iMaxHeight;
-    m_WidthFit = widthFit;
-    m_HeightFit = heightFit;
-    m_iXOffset = iXOffset;
-    m_iYOffset = iYOffset;
+    guiComponent::build();
 
     ITexture * pTLTex = pMainTexs[0];
     ITexture * pBRTex = pMainTexs[7];
@@ -91,10 +85,9 @@ void guiContainer::init(FrameFitBehavior widthFit, FrameFitBehavior heightFit, i
 
     QuadData ** pQuads;
     int nQuads = computeQuadsList(&pQuads, pMainTexs);
-    pGeometry->build(nQuads, pQuads);
+    ((IGeometryQuads*)m_pGeometry)->build(nQuads, pQuads);
     QuadData::releaseQuads(nQuads, pQuads);
-    m_pStencilGeometry = pStencil;
-    pStencil->build(m_iInnerWidth, m_iInnerHeight);
+    m_pStencilGeometry->build(m_iInnerWidth, m_iInnerHeight);
 
     // Scroll buttons positions
     m_ScrollButtonsData[0].x = m_iInnerXPxl + m_iInnerWidth - m_iScrollButtonWidth;
@@ -105,6 +98,8 @@ void guiContainer::init(FrameFitBehavior widthFit, FrameFitBehavior heightFit, i
     m_ScrollButtonsData[2].y = m_iInnerYPxl + m_iInnerHeight - m_iScrollButtonWidth;
     m_ScrollButtonsData[3].x = m_iInnerXPxl + m_iInnerWidth - m_iScrollButtonHeight;
     m_ScrollButtonsData[3].y = m_iInnerYPxl + m_iInnerHeight - m_iScrollButtonWidth;
+
+    return this;
 }
 
 // -----------------------------------------------------------------

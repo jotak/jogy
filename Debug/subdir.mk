@@ -19,7 +19,8 @@ CPP_SRCS += \
 ../guiPopup.cpp \
 ../guiSmartSlider.cpp \
 ../guiTabbedFrame.cpp \
-../guiToggleButton.cpp 
+../guiToggleButton.cpp \
+../jogy.cpp 
 
 OBJS += \
 ./guiButton.o \
@@ -37,7 +38,8 @@ OBJS += \
 ./guiPopup.o \
 ./guiSmartSlider.o \
 ./guiTabbedFrame.o \
-./guiToggleButton.o 
+./guiToggleButton.o \
+./jogy.o 
 
 CPP_DEPS += \
 ./guiButton.d \
@@ -55,14 +57,15 @@ CPP_DEPS += \
 ./guiPopup.d \
 ./guiSmartSlider.d \
 ./guiTabbedFrame.d \
-./guiToggleButton.d 
+./guiToggleButton.d \
+./jogy.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -I"/home/jotak/dev/joson" -O0 -g3 -Wall -c -fmessage-length=0 -std=c++0x -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	g++ -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

@@ -65,8 +65,7 @@ void guiFrameMouseFocus::onUpdate(double delta)
 // -----------------------------------------------------------------
 guiFrameMouseFocus * guiFrameMouseFocus::clone()
 {
-    guiFrameMouseFocus * pClone = new guiFrameMouseFocus(m_uEffectId, m_fTotalTime);
-    return pClone;
+    return new guiFrameMouseFocus(m_uEffectId, m_fTotalTime);
 }
 
 // -----------------------------------------------------------------

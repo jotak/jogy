@@ -18,18 +18,27 @@ public:
     // Size and position
     virtual void onResize(int iOldWidth, int iOldHeight);
 
-    // Clone / init
-    virtual void init(int iRef, int iVal, Color color, Texture * pFgTex, Texture * pBgTex, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl);
-
-    // Static default constructors
-    static guiGauge * createDefaultGauge(int iRef, Color color, int iWidth, int iHeight, string sId);
-
     // Other
     void setMax(int iVal);
     void setValue(int iVal);
 
+    // Builder
+    virtual guiGauge * build(ITexture * pFgTex, ITexture * pBgTex);
+    guiGauge * withGauge(int reference, int value) {
+    	m_iRefValue = reference; m_iCurValue = value; return this;
+    }
+    guiGauge * withColor(Color color) {
+    	m_Color = color; return this;
+    }
+    guiGauge * withForeground(IGeometryQuads * pFgGeo) {
+    	m_pForegroundGeometry = pFgGeo; return this;
+    }
+    guiGauge * withBackground(IGeometryQuads * pBgGeo) {
+    	withGeometry(pBgGeo); return this;
+    }
+
 protected:
-    GeometryQuads * m_pForegroundGeometry;
+    IGeometryQuads * m_pForegroundGeometry;
     int m_iRefValue;
     int m_iCurValue;
     Color m_Color;

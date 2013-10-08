@@ -44,15 +44,6 @@ public:
     guiComponent * getClickedComponent() { return ((guiPopupDocument*)getDocument())->getClickedComponent(); };
     guiButton * getButton(int iButton);
 
-    // Static default constructors
-    static guiPopup * createEmptyPopup();
-    static guiPopup * createYesNoPopup(string sText);
-    static guiPopup * createOkAutoclosePopup(string sText);
-    static guiPopup * createOkCancelPopup(string sText);
-    static guiPopup * createTextAndMultiButtonsPopup(string sText, int iNbButtons, int iWidth);
-    static guiPopup * createTextInputPopup(string sText, int iNbLines, bool bMultiLines, int iBoxWidth);
-    static guiPopup * createTimedPopup(string sText, double fTimer, int iWidth);
-
 protected:
     guiPopup(); // constructor is private ; use static constructor functions instead, or write subclass
     double m_fTimer;

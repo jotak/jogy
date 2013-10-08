@@ -60,8 +60,11 @@ public:
     void setContentChanged() { m_bContentChanged = true; };
     void setOwner(guiContainer * pOwner) { m_pOwner = pOwner; };
 
-    // Clone / init
-    virtual void init(string sTitle, int xPxl, int yPxl, int wPxl, int hPxl, IGeometryQuads * pGeometry);
+    // Builder
+    virtual guiDocument * build();
+    guiDocument * withTitle(string title) {
+    	m_sTitle = title; return this;
+    }
 
 protected:
     string m_sTitle;

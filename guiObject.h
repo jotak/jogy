@@ -45,9 +45,6 @@ public:
     void vCenterOn(guiObject * pOther);
     void hCenterOn(guiObject * pOther);
 
-    // Clone and init
-    virtual void init(int xPxl, int yPxl, int wPxl, int hPxl, IGeometry * pGeometry);
-
     // Tooltip text
     string getTooltipText() { return m_sTooltip; };
     void setTooltipText(string sTooltip) { m_sTooltip = sTooltip; };
@@ -55,6 +52,18 @@ public:
     // Other
     Color getDiffuseColor() { return m_DiffuseColor; };
     void setDiffuseColor(Color color) { m_DiffuseColor = color; };
+
+    // Builder
+    virtual guiObject * build() { return this; };
+    guiObject * withPosition(int x, int y) {
+    	m_iXPxl = x; m_iYPxl = y; return this;
+    }
+    guiObject * withDimensions(int w, int h) {
+    	m_iWidth = w; m_iHeight = h; return this;
+    }
+    guiObject * withGeometry(IGeometry * pGeometry) {
+    	m_pGeometry = pGeometry; return this;
+    }
 
 protected:
     int m_iXPxl;

@@ -3,7 +3,7 @@
 
 #include "guiFrame.h"
 #include "guiLabel.h"
-#include "../Geometries/GeometryQuads.h"
+#include "../Geometries/IGeometryQuads.h"
 
 class guiTabbedFrame_Document : public BaseObject
 {
@@ -49,9 +49,6 @@ public:
 
     // Clone / init
     virtual void init(Texture ** pTabTexs, FontId fontId, int xdecal, FramePosition positionType, FrameFitBehavior widthFit, FrameFitBehavior heightFit, int iMaxWidth, int iMaxHeight, Texture ** pMainTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl);
-
-    // Static default constructors
-    static guiTabbedFrame * createDefaultTabbedFrame(FrameFitBehavior widthFit, FrameFitBehavior heightFit, int width, int height, bool bAlpha, string sId);
 
 protected:
     list<guiTabbedFrame_Document*> m_pDocumentsList;

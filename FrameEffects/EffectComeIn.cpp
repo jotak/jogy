@@ -1,5 +1,6 @@
 #include "EffectComeIn.h"
 #include "../guiFrame.h"
+#include "../jogy.h"
 
 // -----------------------------------------------------------------
 // Name : EffectComeIn
@@ -27,8 +28,8 @@ void EffectComeIn::onBeginDisplay(int iXOffset, int iYOffset, Color * cpntColor,
     int yPxl = coef * (iYOffset + m_pFrame->getYPos() + m_pFrame->getHeight());
 
     // Translate
-    glPushMatrix();
-    glTranslatef(0, -yPxl, 0.0f);
+    Jogy::interface->pushMatrix();
+    Jogy::interface->translate(0, -yPxl, 0.0f);
 
     // Fading
     Color color(1, 1, 1, coef);
@@ -41,7 +42,7 @@ void EffectComeIn::onBeginDisplay(int iXOffset, int iYOffset, Color * cpntColor,
 // -----------------------------------------------------------------
 void EffectComeIn::onEndDisplay()
 {
-    glPopMatrix();
+    Jogy::interface->popMatrix();
 }
 
 // -----------------------------------------------------------------
@@ -63,8 +64,7 @@ void EffectComeIn::onUpdate(double delta)
 // -----------------------------------------------------------------
 EffectComeIn * EffectComeIn::clone()
 {
-    EffectComeIn * pClone = new EffectComeIn(m_uEffectId, m_fTotalTime);
-    return pClone;
+    return new EffectComeIn(m_uEffectId, m_fTotalTime);
 }
 
 // -----------------------------------------------------------------

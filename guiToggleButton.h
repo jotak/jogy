@@ -13,10 +13,6 @@ public:
     virtual guiObject * onButtonEvent(ButtonAction * pEvent);
     virtual void setClickState(bool bClickState) { m_bClickState = bClickState; };
     bool getClickState() { return m_bClickState; };
-
-    // Static default constructors
-    static guiToggleButton * createDefaultTexturedToggleButton(Texture * pTex, int iSize, string sId);
-    static guiToggleButton * createDefaultCheckBox(string sId);
 };
 
 #endif

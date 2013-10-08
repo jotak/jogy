@@ -61,8 +61,7 @@ void guiFrameFlash::onUpdate(double delta)
 // -----------------------------------------------------------------
 guiFrameFlash * guiFrameFlash::clone()
 {
-    guiFrameFlash * pClone = new guiFrameFlash(m_uEffectId, m_fTotalTime);
-    return pClone;
+    return new guiFrameFlash(m_uEffectId, m_fTotalTime);
 }
 
 // -----------------------------------------------------------------

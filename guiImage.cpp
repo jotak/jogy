@@ -20,11 +20,11 @@ guiImage::~guiImage()
 }
 
 // -----------------------------------------------------------------
-// Name : init
+// Name : build
 // -----------------------------------------------------------------
-void guiImage::init(ITexture * pTex, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl, IGeometryQuads * pGeometry)
+guiImage * guiImage::build(ITexture * pTex)
 {
-    guiComponent::init(sCpntId, xPxl, yPxl, wPxl, hPxl, pGeometry);
+    guiComponent::build();
     if (m_iWidth < 0) {
     	m_iWidth = pTex->getWidth();
     }
@@ -32,7 +32,8 @@ void guiImage::init(ITexture * pTex, string sCpntId, int xPxl, int yPxl, int wPx
     	m_iHeight = pTex->getHeight();
     }
     QuadData quad(0, m_iWidth, 0, m_iHeight, pTex);
-    pGeometry->build(&quad);
+    ((IGeometryQuads*)m_pGeometry)->build(&quad);
+    return this;
 }
 
 // -----------------------------------------------------------------

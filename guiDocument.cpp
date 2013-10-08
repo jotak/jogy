@@ -27,23 +27,12 @@ guiDocument::~guiDocument()
 }
 
 // -----------------------------------------------------------------
-// Name : init
+// Name : build
 // -----------------------------------------------------------------
-void guiDocument::init(string sTitle, int xPxl, int yPxl, int wPxl, int hPxl, IGeometryQuads * pGeometry)
+guiDocument * guiDocument::build()
 {
-    guiObject::init(xPxl, yPxl, wPxl, hPxl, pGeometry);
-    m_sTitle = sTitle;
+    guiObject::build();
     onLoad();
-}
-
-// -----------------------------------------------------------------
-// Name : clone
-// -----------------------------------------------------------------
-guiObject * guiDocument::clone()
-{
-    guiDocument * pDoc = new guiDocument();
-    pDoc->init(m_sTitle, m_iXPxl, m_iYPxl, m_iWidth, m_iHeight, (IGeometryQuads*) m_pGeometry->clone());
-    return pDoc;
 }
 
 // -----------------------------------------------------------------

@@ -1,6 +1,5 @@
 #include "guiFrameOutro.h"
 #include "../guiFrame.h"
-#include "../../Display/DisplayEngine.h"
 
 // -----------------------------------------------------------------
 // Name : guiFrameOutro
@@ -27,12 +26,12 @@ void guiFrameOutro::onBeginDisplay(int iXOffset, int iYOffset, Color * cpntColor
     float coef = max(m_fTimer / m_fTotalTime, 0.001f); // must not be 0
 
     // Scaling
-    Coords3D fCenter = _display->getGUI3D(CoordsScreen(
+    Vertex fCenter = Jogy::interface->screenTransform(
                            iXOffset + m_pFrame->getXPos() + m_pFrame->getWidth() / 2,
-                           iYOffset + m_pFrame->getYPos() + m_pFrame->getHeight() / 2));
-    glPushMatrix();
-    glTranslatef(fCenter.x * (1 - coef), fCenter.y * (1 - coef), 0.0f);
-    glScalef(coef, coef, 1.0f);
+                           iYOffset + m_pFrame->getYPos() + m_pFrame->getHeight() / 2);
+    Jogy::interface->pushMatrix();
+    Jogy::interface->translate(fCenter.x * (1 - coef), fCenter.y * (1 - coef), 0.0f);
+    Jogy::interface->scale(coef, coef, 1.0f);
 }
 
 // -----------------------------------------------------------------
@@ -40,7 +39,7 @@ void guiFrameOutro::onBeginDisplay(int iXOffset, int iYOffset, Color * cpntColor
 // -----------------------------------------------------------------
 void guiFrameOutro::onEndDisplay()
 {
-    glPopMatrix();
+	Jogy::interface->popMatrix();
 }
 
 // -----------------------------------------------------------------

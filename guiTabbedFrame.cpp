@@ -307,36 +307,6 @@ void guiTabbedFrame::moveTo(int xPxl, int yPxl)
     guiFrame::moveTo(xPxl, yPxl);
 }
 
-// -----------------------------------------------------------------
-// Name : createDefaultTabbedFrame
-//  Static default constructor
-// -----------------------------------------------------------------
-guiTabbedFrame * guiTabbedFrame::createDefaultTabbedFrame(FrameFitBehavior widthFit, FrameFitBehavior heightFit, int width, int height, bool bAlpha, string sId)
-{
-    guiTabbedFrame * pFrame = new guiTabbedFrame();
-    Texture * iTabs[6];
-    iTabs[0] = _tex->findTexture("gui/interface:TabSelLeft");
-    iTabs[1] = _tex->findTexture("gui/interface:TabSelMiddle");
-    iTabs[2] = _tex->findTexture("gui/interface:TabSelRight");
-    iTabs[3] = _tex->findTexture("gui/interface:TabLeft");
-    iTabs[4] = _tex->findTexture("gui/interface:TabMiddle");
-    iTabs[5] = _tex->findTexture("gui/interface:TabRight");
-    Texture * iTexs[8];
-    iTexs[0] = _tex->findTexture("gui/interface:FrmTL");
-    iTexs[1] = _tex->findTexture("gui/interface:FrmTC");
-    iTexs[2] = _tex->findTexture("gui/interface:FrmTR");
-    iTexs[3] = _tex->findTexture("gui/interface:FrmCL");
-    iTexs[4] = _tex->findTexture("gui/interface:FrmCR");
-    iTexs[5] = _tex->findTexture("gui/interface:FrmBL");
-    iTexs[6] = _tex->findTexture("gui/interface:FrmBC");
-    iTexs[7] = _tex->findTexture("gui/interface:FrmBR");
-    pFrame->init(iTabs, Bookantiqua_wh_16,
-                 3, FP_Floating, widthFit, heightFit, 0, 0,
-                 iTexs, sId, 0, 0, width, height);
-    return pFrame;
-}
-
-
 
 
 

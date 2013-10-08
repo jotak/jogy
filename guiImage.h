@@ -2,6 +2,7 @@
 #define _GUI_IMAGE_H
 
 #include "guiComponent.h"
+#include "Utils/ITexture.h"
 
 class guiImage : public guiComponent
 {
@@ -16,14 +17,14 @@ public:
     // Size and position
     virtual void onResize(int iOldWidth, int iOldHeight);
 
-    // Clone / init
-    virtual void init(ITexture * pTex, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl, IGeometryQuads * pGeometry);
-
     // Misc.
     void setCatchClicks(bool b) { m_bCatchClicks = b; };
     virtual guiObject * onButtonEvent(ButtonAction * pEvent);
     ITexture * getImageTexture();
     void setImageTexture(ITexture * pTex);
+
+    // Builder
+    virtual guiImage * build(ITexture * pTex);
 
 protected:
     bool m_bCatchClicks;

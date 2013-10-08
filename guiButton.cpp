@@ -10,8 +10,8 @@
 // -----------------------------------------------------------------
 guiButton::guiButton() : guiImage()
 {
-    m_ClickOption = BCO_None;
-    m_OverOption = BCO_None;
+    m_ClickOption = None;
+    m_OverOption = None;
     m_bMouseDown = m_bMouseOver = false;
     m_bClickState = false;
     m_pLabel = new guiLabel();
@@ -40,28 +40,49 @@ guiButton::~guiButton()
 }
 
 // -----------------------------------------------------------------
-// Name : init
+// Name : withLabel
 // -----------------------------------------------------------------
-void guiButton::init(string sText, fontid fontId, Color textColor, ITexture * pClickedTex, BtnClickOptions clickOption, ITexture * pOverTex, BtnClickOptions overOption, ITexture * pTex, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl, IGeometryQuads * pLabelGeo, IGeometryQuads * pImgGeo, IGeometryQuads * pClickedGeo, IGeometryQuads * pOverGeo)
+guiButton * guiButton::withLabel(string sText, fontid fontId, Color textColor, IGeometryQuads * pLabelGeo)
 {
-    guiImage::init(pTex, sCpntId, xPxl, yPxl, wPxl, hPxl, pImgGeo);
-    m_pLabel->init(sText, fontId, textColor, "ButtonLabel", 0, 0, 0, 0, pLabelGeo);
+	m_pLabel->withCpntId("ButtonLabel")
+			->withPosition(0, 0)
+			->withDimensions(0, 0);
+	m_pLabel->withText(sText, fontId, textColor)
+			->withGeometry(pLabelGeo);
+	return this;
+}
+
+// -----------------------------------------------------------------
+// Name : withClickTexture
+// -----------------------------------------------------------------
+guiButton * guiButton::withClickTexture(ITexture * pTex, IGeometryQuads * pGeo)
+{
+    m_pGeometryClicked = pGeo;
+    QuadData quad(0, m_iWidth, 0, m_iHeight, pTex);
+    pGeo->build(&quad);
+	return this;
+}
+
+// -----------------------------------------------------------------
+// Name : withOverTexture
+// -----------------------------------------------------------------
+guiButton * guiButton::withOverTexture(ITexture * pTex, IGeometryQuads * pGeo)
+{
+    m_pGeometryOver = pGeo;
+    QuadData quad(0, m_iWidth, 0, m_iHeight, pTex);
+    pGeo->build(&quad);
+	return this;
+}
+
+// -----------------------------------------------------------------
+// Name : build
+// -----------------------------------------------------------------
+guiButton * guiButton::build(ITexture * pTex)
+{
+    guiImage::build(pTex);
     m_pLabel->centerOn(this);
-    m_pGeometryNormal = (GeometryQuads*) pImgGeo;
-    m_ClickOption = clickOption;
-    if (m_ClickOption == BCO_ReplaceTex || m_ClickOption == BCO_AddTex)
-    {
-        m_pGeometryClicked = pClickedGeo;
-        QuadData quad(0, m_iWidth, 0, m_iHeight, pClickedTex);
-        pClickedGeo->build(&quad);
-    }
-    m_OverOption = overOption;
-    if (m_OverOption == BCO_ReplaceTex || m_OverOption == BCO_AddTex)
-    {
-    	m_pGeometryOver = pOverGeo;
-        QuadData quad(0, m_iWidth, 0, m_iHeight, pOverTex);
-        m_pGeometryOver->build(&quad);
-    }
+    m_pGeometryNormal = (IGeometryQuads*) m_pGeometry;
+    return this;
 }
 
 // -----------------------------------------------------------------
@@ -95,32 +116,32 @@ void guiButton::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color doc
         {
             switch (m_ClickOption)
             {
-            case BCO_None:
+            case None:
                 break;
-            case BCO_ReplaceTex:
+            case ReplaceTex:
                 m_pGeometry = m_pGeometryClicked;
                 break;
-            case BCO_AddTex:
+            case AddTex:
                 guiImage::displayAt(iXOffset, iYOffset, cpntColor, docColor);
                 m_pGeometry = m_pGeometryClicked;
                 break;
-            case BCO_Decal:
+            case Decal:
                 iXOffset += 3;
                 iYOffset += 3;
                 break;
-            case BCO_Scale:
+            case Scale:
             {
                 float coef = 1.2f;
-                Vertex fCenter = IGeometry::screenTransform(
+                Vertex fCenter = Jogy::interface->screenTransform(
                         iXOffset + getXPos() + getWidth() / 2,
                         iYOffset + getYPos() + getHeight() / 2);
-                glPushMatrix();
-                glTranslatef(fCenter.x * (1 - coef), fCenter.y * (1 - coef), 0.0f);
-                glScalef(coef, coef, 1.0f);
+                Jogy::interface->pushMatrix();
+                Jogy::interface->translate(fCenter.x * (1 - coef), fCenter.y * (1 - coef), 0.0f);
+                Jogy::interface->scale(coef, coef, 1.0f);
                 bNeedPop = true;
                 break;
             }
-            case BCO_Enlight:
+            case Enlight:
             {
                 cpntColor = (cpntColor + 1) / 2;
                 bAddMode = true;
@@ -135,32 +156,32 @@ void guiButton::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color doc
         } else if (m_bMouseOver && !m_bClickState) {
             switch (m_OverOption)
             {
-            case BCO_None:
+            case None:
                 break;
-            case BCO_ReplaceTex:
+            case ReplaceTex:
                 m_pGeometry = m_pGeometryOver;
                 break;
-            case BCO_AddTex:
+            case AddTex:
                 guiImage::displayAt(iXOffset, iYOffset, cpntColor, docColor);
                 m_pGeometry = m_pGeometryOver;
                 break;
-            case BCO_Decal:
+            case Decal:
                 iXOffset += 3;
                 iYOffset += 3;
                 break;
-            case BCO_Scale:
+            case Scale:
             {
                 float coef = 1.2f;
-                Vertex fCenter = IGeometry::screenTransform(
+                Vertex fCenter = Jogy::interface->screenTransform(
                         iXOffset + getXPos() + getWidth() / 2,
                         iYOffset + getYPos() + getHeight() / 2);
-                glPushMatrix();
-                glTranslatef(fCenter.x * (1 - coef), fCenter.y * (1 - coef), 0.0f);
-                glScalef(coef, coef, 1.0f);
+                Jogy::interface->pushMatrix();
+                Jogy::interface->translate(fCenter.x * (1 - coef), fCenter.y * (1 - coef), 0.0f);
+                Jogy::interface->scale(coef, coef, 1.0f);
                 bNeedPop = true;
                 break;
             }
-            case BCO_Enlight:
+            case Enlight:
             {
                 cpntColor = (cpntColor + 1) / 2;
                 bAddMode = true;
@@ -170,7 +191,7 @@ void guiButton::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color doc
         }
         bool bPrevMode = false;
         if (bAddMode) {
-            bPrevMode = _display->setAdditiveMode(true);
+            bPrevMode = Jogy::interface->setAdditive(true);
         }
         guiImage::displayAt(iXOffset, iYOffset, cpntColor, docColor);
         m_pLabel->displayAt(iXOffset, iYOffset, cpntColor, docColor);
@@ -178,10 +199,10 @@ void guiButton::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color doc
             m_pGeometryAttachedImage->display(m_iXPxl + iXOffset, m_iYPxl + iYOffset, cpntColor * m_DiffuseColor);
         }
         if (bAddMode) {
-            _display->setAdditiveMode(bPrevMode);
+        	Jogy::interface->setAdditive(bPrevMode);
         }
         if (bNeedPop) {
-            glPopMatrix();
+        	Jogy::interface->popMatrix();
         }
     }
 }
@@ -373,73 +394,3 @@ void guiButton::setEnabled(bool bEnabled)
         m_bClickState = false;
     }
 }
-
-//// -----------------------------------------------------------------
-//// Name : createDefaultNormalButton
-////  Static default constructor
-////  Use it to avoid passing always the same 3591218 arguments to "init"
-//// -----------------------------------------------------------------
-//guiButton * guiButton::createDefaultNormalButton(string sText, string sId)
-//{
-//    guiButton * pBtn = new guiButton();
-//    pBtn->init(
-//        sText, H2_FONT, H2_COLOR,
-//        _tex->findTexture("gui/interface:Transparent"),
-//        BCO_None,
-//        _tex->findTexture("gui/interface:Transparent"),
-//        BCO_Decal,
-//        _tex->findTexture("gui/interface:Transparent"),
-//        sId, 0, 0, 50, 32);
-//    return pBtn;
-//}
-//
-//// -----------------------------------------------------------------
-//// Name : createDefaultSmallButton
-////  Static default constructor
-////  Use it to avoid passing always the same 3591218 arguments to "init"
-//// -----------------------------------------------------------------
-//guiButton * guiButton::createDefaultSmallButton(string sText, int width, string sId)
-//{
-//    guiButton * pBtn = new guiButton();
-//    pBtn->init(
-//        sText, TEXT_FONT, TEXT_COLOR,
-//        _tex->findTexture("gui/interface:SmallButtonClicked"),
-//        BCO_ReplaceTex,
-//        NULL, BCO_None,
-//        _tex->findTexture("gui/interface:SmallButtonNormal"),
-//        sId, 0, 0, width, 20);
-//    return pBtn;
-//}
-//
-//// -----------------------------------------------------------------
-//// Name : createDefaultWhiteButton
-////  Static default constructor
-////  Use it to avoid passing always the same 3591218 arguments to "init"
-//// -----------------------------------------------------------------
-//guiButton * guiButton::createDefaultWhiteButton(string sText, int width, int height, string sId)
-//{
-//    guiButton * pBtn = new guiButton();
-//    pBtn->init(
-//        sText, TEXT_FONT, TEXT_COLOR,
-//        _tex->findTexture("gui/interface:WhiteButtonClicked"),
-//        BCO_ReplaceTex,
-//        NULL, BCO_None,
-//        _tex->findTexture("gui/interface:WhiteButtonNormal"),
-//        sId, 0, 0, width, height);
-//    return pBtn;
-//}
-//
-//// -----------------------------------------------------------------
-//// Name : createDefaultImageButton
-////  Static default constructor
-////  Use it to avoid passing always the same 3591218 arguments to "init"
-//// -----------------------------------------------------------------
-//guiButton * guiButton::createDefaultImageButton(Texture * pTex, string sId)
-//{
-//    guiButton * pBtn = new guiButton();
-//    pBtn->init(
-//        "", TEXT_FONT, TEXT_COLOR,
-//        NULL, BCO_Decal, NULL, BCO_None,
-//        pTex, sId, 0, 0, -1, -1);
-//    return pBtn;
-//}

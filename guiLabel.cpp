@@ -24,16 +24,14 @@ guiLabel::~guiLabel()
 }
 
 // -----------------------------------------------------------------
-// Name : init
+// Name : build
 // -----------------------------------------------------------------
-void guiLabel::init(string sText, fontid fontId, Color textColor, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl, IGeometry * pGeometry)
+guiLabel * guiLabel::build()
 {
-    guiComponent::init(sCpntId, xPxl, yPxl, wPxl, hPxl, pGeometry);
-    m_FontId = fontId;
-    setDiffuseColor(textColor);
-    m_iBoxWidth = wPxl;
-    m_sText = sText;
+    guiComponent::build();
+    m_iBoxWidth = m_iWidth;
     computeGeometry();
+    return this;
 }
 
 // -----------------------------------------------------------------
@@ -74,13 +72,11 @@ void guiLabel::setBoxWidth(int iWidth)
 void guiLabel::computeGeometry()
 {
     if (m_iBoxWidth > 0) {
-        setHeight(_font->putStringInBox(m_sText, m_iBoxWidth, m_aiAllFonts[m_FontId]));
-        setWidth(_font->getStringLength(m_sText, m_aiAllFonts[m_FontId]));
-    } else {
-        setWidth(_font->getStringLength(m_sText, m_aiAllFonts[m_FontId]));
-        setHeight(_font->getStringHeight(m_sText, m_aiAllFonts[m_FontId]));
+    	Jogy::interface->wrapText(m_sText, m_iBoxWidth, m_aiAllFonts[m_FontId]);
     }
-    ((GeometryText*)m_pGeometry)->setText(m_sText, m_aiAllFonts[m_FontId]);
+    setWidth(Jogy::interface->computeTextWidth(m_sText, m_aiAllFonts[m_FontId]));
+    setHeight(Jogy::interface->computeTextHeight(m_sText, m_aiAllFonts[m_FontId]));
+    ((IGeometryText*)m_pGeometry)->setText(m_sText, m_aiAllFonts[m_FontId]);
 }
 
 // -----------------------------------------------------------------
@@ -102,34 +98,3 @@ guiObject * guiLabel::onButtonEvent(ButtonAction * pEvent)
     m_pOwner->onButtonEvent(pEvent, this);
     return this;
 }
-//
-//// -----------------------------------------------------------------
-//// Name : createDefaultLabel
-////  Static default constructor
-//// -----------------------------------------------------------------
-//guiLabel * guiLabel::createDefaultLabel(string sText, string sId)
-//{
-//    guiLabel * pLbl = new guiLabel();
-//    pLbl->init(
-//    		sText,
-//    		TEXT_FONT,
-//    		TEXT_COLOR,
-//    		sId,
-//    		0/*x*/,
-//    		0/*y*/,
-//    		-1/*w - it will be computed automatically*/,
-//    		-1/*h - it will be computed automatically*/);
-//    return pLbl;
-//}
-//
-//// -----------------------------------------------------------------
-//// Name : createDefaultLabel
-////  Static default constructor
-//// -----------------------------------------------------------------
-//guiLabel * guiLabel::createDefaultLabel(string sText, string sId, int xPxl, int yPxl)
-//{
-//	guiLabel * pLbl = createDefaultLabel(sText, sId);
-//	pLbl->setXPos(xPxl);
-//	pLbl->setYPos(yPxl);
-//	return pLbl;
-//}

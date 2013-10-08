@@ -20,12 +20,6 @@ guiFrameEffect::guiFrameEffect(u16 uEffectId, u8 onFinished)
 // -----------------------------------------------------------------
 guiFrameEffect::~guiFrameEffect()
 {
-#ifdef DBG_VERBOSE1
-    printf("Begin destroy guiFrameEffect\n");
-#endif
-#ifdef DBG_VERBOSE1
-    printf("End destroy guiFrameEffect\n");
-#endif
 }
 
 // -----------------------------------------------------------------

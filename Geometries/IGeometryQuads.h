@@ -1,15 +1,16 @@
-#ifndef _GEOMETRY_QUADS_H
-#define _GEOMETRY_QUADS_H
+#ifndef _IGEOMETRY_QUADS_H
+#define _IGEOMETRY_QUADS_H
 
 #include "IGeometry.h"
 #include "../Utils/ITexture.h"
+#include "../jogy.h"
 
 class QuadData
 {
 public:
     QuadData(int xstart, int xend, int ystart, int yend, ITexture * pTexture) {
-    	vStart = IGeometry::screenTransform(xstart, ystart);
-    	vEnd = IGeometry::screenTransform(xend, yend);
+    	vStart = Jogy::interface->screenTransform(xstart, ystart);
+    	vEnd = Jogy::interface->screenTransform(xend, yend);
     	this->pTexture = pTexture;
     }
     QuadData(Vertex vStart, Vertex vEnd, ITexture * pTexture) {

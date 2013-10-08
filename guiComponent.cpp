@@ -21,12 +21,12 @@ guiComponent::~guiComponent()
 }
 
 // -----------------------------------------------------------------
-// Name : init
+// Name : build
 // -----------------------------------------------------------------
-void guiComponent::init(string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl, IGeometry * pGeometry)
+guiComponent * guiComponent::build()
 {
-    guiObject::init(xPxl, yPxl, wPxl, hPxl, pGeometry);
-    m_sCpntId = sCpntId;
+    guiObject::build();
+    return this;
 }
 
 // -----------------------------------------------------------------

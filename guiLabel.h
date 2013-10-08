@@ -24,12 +24,11 @@ public:
     void setCatchClicks(bool b) { m_bCatchClicks = b; };
     void setComponentOwner(guiComponent * pOwner) { m_pComponentOwner = pOwner; };
 
-    // Clone / init
-    virtual void init(string sText, fontid fontId, Color textColor, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl, IGeometry * pGeometry);
-
-    // static builders
-    static guiLabel * createDefaultLabel(string sText, string sId);
-    static guiLabel * createDefaultLabel(string sText, string sId, int xPxl, int yPxl);
+    // Builder
+    virtual guiLabel * build();
+    guiLabel * withText(string sText, fontid fontId, Color textColor) {
+    	m_sText = sText; m_FontId = fontId; setDiffuseColor(textColor); return this;
+    }
 
 protected:
     void computeGeometry();

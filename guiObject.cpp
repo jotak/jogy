@@ -82,18 +82,6 @@ void guiObject::setDimensions(int iWidth, int iHeight)
 }
 
 // -----------------------------------------------------------------
-// Name : init
-// -----------------------------------------------------------------
-void guiObject::init(int xPxl, int yPxl, int wPxl, int hPxl, IGeometry * pGeometry)
-{
-    m_iXPxl = xPxl;
-    m_iYPxl = yPxl;
-    m_iWidth = wPxl;
-    m_iHeight = hPxl;
-    m_pGeometry = pGeometry;
-}
-
-// -----------------------------------------------------------------
 // Name : centerOn
 // -----------------------------------------------------------------
 void guiObject::centerOn(guiObject * pOther)

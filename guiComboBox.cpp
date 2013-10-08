@@ -1,7 +1,4 @@
 #include "guiComboBox.h"
-#include "../Display/DisplayEngine.h"
-#include "../Display/TextureEngine.h"
-#include "../Managers/InterfaceManager.h"
 
 // -----------------------------------------------------------------
 // Name : guiComboBox
@@ -396,36 +393,4 @@ void guiComboBox::clearList()
 {
     m_pList->getDocument()->deleteAllComponents();
     m_pLabel->setText("");
-}
-
-// -----------------------------------------------------------------
-// Name : createDefaultComboBox
-//  Static default constructor
-//  Use it to avoid passing always the same 3591218 arguments to "init"
-// -----------------------------------------------------------------
-guiComboBox * guiComboBox::createDefaultComboBox(string sId)
-{
-    guiComboBox * pCombo = new guiComboBox();
-    Texture * maintexs[3];
-    maintexs[0] = _tex->findTexture("gui/interface:ComboLeft");
-    maintexs[1] = _tex->findTexture("gui/interface:ComboMiddle");
-    maintexs[2] = _tex->findTexture("gui/interface:ComboRight");
-    Texture * frmtex[8];
-    frmtex[0] = _tex->findTexture("gui/interface:ComboListBorder");
-    frmtex[1] = _tex->findTexture("gui/interface:ComboListBorder");
-    frmtex[2] = _tex->findTexture("gui/interface:ComboListBorder");
-    frmtex[3] = _tex->findTexture("gui/interface:ComboListBorder");
-    frmtex[4] = _tex->findTexture("gui/interface:ComboListBorder");
-    frmtex[5] = _tex->findTexture("gui/interface:ComboListBorder");
-    frmtex[6] = _tex->findTexture("gui/interface:ComboListBorder");
-    frmtex[7] = _tex->findTexture("gui/interface:ComboListBorder");
-    pCombo->init(maintexs,
-    		_tex->findTexture("gui/interface:ComboListBg"),
-    		TEXT_COLOR, TEXT_FONT, FB_FitDocumentToFrame, FB_FitFrameToDocumentWhenSmaller,
-    		0, 200,
-    		_tex->findTexture("gui/interface:Transparent"),
-    		_tex->findTexture("gui/interface:Transparent"),
-    		BCO_Enlight, 16,
-    		frmtex, sId, 0, 0, 200, 28);
-    return pCombo;
 }

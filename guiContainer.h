@@ -79,11 +79,20 @@ public:
     void setMaxWidth(int width) { m_iMaxWidth = width; };
     void setMaxHeight(int height) { m_iMaxHeight = height; };
 
-    // Clone / init
-    virtual void init(FrameFitBehavior widthFit, FrameFitBehavior heightFit, int iXOffset, int iYOffset, int iMaxWidth, int iMaxHeight, ITexture ** pMainTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl, IGeometryQuads * pGeometry, IStencilGeometry * pStencil);
-
-    // Static default constructors
-    static guiContainer * createDefaultPanel(int width, int height, string sId);
+    // Builder
+    virtual guiContainer * build(ITexture ** pMainTexs);
+    guiContainer * withFrameFitBehavior(FrameFitBehavior widthFit, FrameFitBehavior heightFit) {
+    	m_WidthFit = widthFit; m_HeightFit = heightFit; return this;
+    }
+    guiContainer * withOffset(int x, int y) {
+    	m_iXOffset = x; m_iYOffset = y; return this;
+    }
+    guiContainer * withMaxDimensions(int w, int h) {
+    	m_iMaxWidth = w; m_iMaxHeight = h; return this;
+    }
+    guiContainer * withStencil(IStencilGeometry * pStencil) {
+    	m_pStencilGeometry = pStencil; return this;
+    }
 
     // Static data
     static void initStatic(IGeometryQuads ** scrollGeometries, ITexture ** scrollTextures);

@@ -34,8 +34,11 @@ public:
     virtual bool isAt(int xPxl, int yPxl) { return m_bVisible && guiObject::isAt(xPxl, yPxl); };
     void highlight(u8 type);
 
-    // Clone / init
-    virtual void init(string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl, IGeometry * pGeometry);
+    // Builder
+    virtual guiComponent * build();
+    guiComponent * withCpntId(string cpntId) {
+    	m_sCpntId = cpntId; return this;
+    }
 
 protected:
     bool m_bVisible;

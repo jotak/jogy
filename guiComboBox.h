@@ -44,9 +44,6 @@ public:
     // Clone / init
     virtual void init(Texture ** pMainTex, Texture * pDocTex, Color textColor, FontId fontId, FrameFitBehavior wfit, FrameFitBehavior hfit, int iMaxWidth, int iMaxHeight, Texture * btnTex1, Texture * btnTex2, BtnClickOptions btnClickOpt, int btnHeight, Texture ** frameTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl);
 
-    // Static default constructors
-    static guiComboBox * createDefaultComboBox(string sId);
-
 protected:
     void centerLabel();
 
