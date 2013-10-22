@@ -43,9 +43,9 @@ guiFrame::~guiFrame()
 // -----------------------------------------------------------------
 // Name : build
 // -----------------------------------------------------------------
-guiFrame * guiFrame::build(ITexture ** pMainTexs)
+guiFrame * guiFrame::build()
 {
-    guiContainer::build(pMainTexs);
+    guiContainer::build();
     return this;
 }
 

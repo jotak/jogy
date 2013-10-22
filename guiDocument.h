@@ -3,6 +3,7 @@
 
 #include "ComponentOwnerInterface.h"
 #include "guiComponent.h"
+#include "Geometries/IGeometryQuads.h"
 
 class guiContainer;
 class IGeometryQuads;
@@ -62,6 +63,7 @@ public:
 
     // Builder
     virtual guiDocument * build();
+    guiDocument * withGeometry(ITexture * pTex, IGeometryQuads * pGeo);
     guiDocument * withTitle(string title) {
     	m_sTitle = title; return this;
     }
@@ -73,9 +75,12 @@ protected:
     bool m_bContentChanged;
     bool m_bEnabled;
     guiContainer * m_pOwner;
+    IGeometryQuads * m_pGeometry;
 
 private:
     list<guiComponent*> m_pComponentsList;
+
+    void rebuildGeometry();
 };
 
 #endif

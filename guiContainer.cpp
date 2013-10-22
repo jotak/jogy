@@ -57,6 +57,7 @@ guiContainer::guiContainer() : guiComponent()
     m_iXOffset = m_iYOffset = 0;
     m_iClickedScroll = -1;
     m_fScrollDelta = 0.0f;
+    m_pGeometry = NULL;
 }
 
 // -----------------------------------------------------------------
@@ -67,26 +68,24 @@ guiContainer::~guiContainer()
 {
     FREE(m_pDoc);
     FREE(m_pStencilGeometry);
+	FREE(m_pGeometry);
 }
 
 // -----------------------------------------------------------------
 // Name : build
 // -----------------------------------------------------------------
-guiContainer * guiContainer::build(ITexture ** pMainTexs)
+guiContainer * guiContainer::build()
 {
     guiComponent::build();
 
-    ITexture * pTLTex = pMainTexs[0];
-    ITexture * pBRTex = pMainTexs[7];
+    ITexture * pTLTex = m_pGeometry->getTexture(0);
+    ITexture * pBRTex = m_pGeometry->getTexture(7);
     m_iInnerXPxl = m_iXPxl + m_iXOffset + pTLTex->getWidth();
     m_iInnerYPxl = m_iYPxl + m_iYOffset + pTLTex->getHeight();
     m_iInnerWidth = m_iWidth - pTLTex->getWidth() - pBRTex->getWidth() - m_iXOffset;
     m_iInnerHeight = m_iHeight - pTLTex->getHeight() - pBRTex->getHeight() - m_iYOffset;
 
-    QuadData ** pQuads;
-    int nQuads = computeQuadsList(&pQuads, pMainTexs);
-    ((IGeometryQuads*)m_pGeometry)->build(nQuads, pQuads);
-    QuadData::releaseQuads(nQuads, pQuads);
+    rebuildGeometry();
     m_pStencilGeometry->build(m_iInnerWidth, m_iInnerHeight);
 
     // Scroll buttons positions
@@ -103,25 +102,48 @@ guiContainer * guiContainer::build(ITexture ** pMainTexs)
 }
 
 // -----------------------------------------------------------------
-// Name : computeQuadsList
+// Name : withGeometry
 // -----------------------------------------------------------------
-int guiContainer::computeQuadsList(QuadData *** pQuads, ITexture ** pTextures)
+guiContainer * guiContainer::withGeometry(ITexture ** pTex, IGeometryQuads * pGeo)
 {
-    // 8 Quads
-    *pQuads = new QuadData*[8];
-    int xPxlMiddleStart = pTextures[0]->getWidth();
-    int xPxlMiddleEnd = m_iWidth - m_iXOffset - pTextures[2]->getWidth();
-    int yPxlMiddleStart = pTextures[0]->getHeight();
-    int yPxlMiddleEnd = m_iHeight - m_iYOffset - pTextures[5]->getHeight();
-    (*pQuads)[0] = new QuadData(0,               xPxlMiddleStart,       yPxlMiddleEnd,   m_iHeight - m_iYOffset, pTextures[0]);
-    (*pQuads)[1] = new QuadData(xPxlMiddleStart, xPxlMiddleEnd,         yPxlMiddleEnd,   m_iHeight - m_iYOffset, pTextures[1]);
-    (*pQuads)[2] = new QuadData(xPxlMiddleEnd,   m_iWidth - m_iXOffset, yPxlMiddleEnd,   m_iHeight - m_iYOffset, pTextures[2]);
-    (*pQuads)[3] = new QuadData(0,               xPxlMiddleStart,       yPxlMiddleStart, yPxlMiddleEnd,          pTextures[3]);
-    (*pQuads)[4] = new QuadData(xPxlMiddleEnd,   m_iWidth - m_iXOffset, yPxlMiddleStart, yPxlMiddleEnd,          pTextures[4]);
-    (*pQuads)[5] = new QuadData(0,               xPxlMiddleStart,       0,               yPxlMiddleStart,        pTextures[5]);
-    (*pQuads)[6] = new QuadData(xPxlMiddleStart, xPxlMiddleEnd,         0,               yPxlMiddleStart,        pTextures[6]);
-    (*pQuads)[7] = new QuadData(xPxlMiddleEnd,   m_iWidth - m_iXOffset, 0,               yPxlMiddleStart,        pTextures[7]);
-    return 8;
+    m_pGeometry = pGeo;
+	// 8 quads
+    QuadData ** pQuads = new QuadData*[8];
+    pQuads[0] = new QuadData(0, 1, 2, 3, pTex[0]);
+    pQuads[1] = new QuadData(1, 2, 2, 3, pTex[1]);
+    pQuads[2] = new QuadData(2, 3, 2, 3, pTex[2]);
+    pQuads[3] = new QuadData(0, 1, 1, 2, pTex[3]);
+    pQuads[4] = new QuadData(2, 3, 1, 2, pTex[4]);
+    pQuads[5] = new QuadData(0, 1, 0, 1, pTex[5]);
+    pQuads[6] = new QuadData(1, 2, 0, 1, pTex[6]);
+    pQuads[7] = new QuadData(2, 3, 0, 1, pTex[7]);
+    m_pGeometry->build(8, pQuads);
+    QuadData::releaseQuads(8, pQuads);
+	return this;
+}
+
+// -----------------------------------------------------------------
+// Name : rebuildGeometry
+// -----------------------------------------------------------------
+void guiContainer::rebuildGeometry()
+{
+	// 8 quads
+    QuadData ** pQuads = new QuadData*[8];
+    int xPxlMiddleStart = m_pGeometry->getTexture(0)->getWidth();
+    int xPxlMiddleEnd = m_iWidth - m_iXOffset - m_pGeometry->getTexture(2)->getWidth();
+    int yPxlMiddleStart = m_pGeometry->getTexture(0)->getHeight();
+    int yPxlMiddleEnd = m_iHeight - m_iYOffset - m_pGeometry->getTexture(5)->getHeight();
+    pQuads[0] = new QuadData(0,               xPxlMiddleStart,       yPxlMiddleEnd,   m_iHeight - m_iYOffset, m_pGeometry->getTexture(0));
+    pQuads[1] = new QuadData(xPxlMiddleStart, xPxlMiddleEnd,         yPxlMiddleEnd,   m_iHeight - m_iYOffset, m_pGeometry->getTexture(1));
+    pQuads[2] = new QuadData(xPxlMiddleEnd,   m_iWidth - m_iXOffset, yPxlMiddleEnd,   m_iHeight - m_iYOffset, m_pGeometry->getTexture(2));
+    pQuads[3] = new QuadData(0,               xPxlMiddleStart,       yPxlMiddleStart, yPxlMiddleEnd,          m_pGeometry->getTexture(3));
+    pQuads[4] = new QuadData(xPxlMiddleEnd,   m_iWidth - m_iXOffset, yPxlMiddleStart, yPxlMiddleEnd,          m_pGeometry->getTexture(4));
+    pQuads[5] = new QuadData(0,               xPxlMiddleStart,       0,               yPxlMiddleStart,        m_pGeometry->getTexture(5));
+    pQuads[6] = new QuadData(xPxlMiddleStart, xPxlMiddleEnd,         0,               yPxlMiddleStart,        m_pGeometry->getTexture(6));
+    pQuads[7] = new QuadData(xPxlMiddleEnd,   m_iWidth - m_iXOffset, 0,               yPxlMiddleStart,        m_pGeometry->getTexture(7));
+
+    m_pGeometry->build(8, pQuads);
+    QuadData::releaseQuads(8, pQuads);
 }
 
 // -----------------------------------------------------------------
@@ -174,8 +196,8 @@ void guiContainer::update(double delta)
 // -----------------------------------------------------------------
 void guiContainer::updateSizeFit()
 {
-    ITexture * pTLTex = ((IGeometryQuads*)m_pGeometry)->getTexture(0);
-    ITexture * pBRTex = ((IGeometryQuads*)m_pGeometry)->getTexture(7);
+    ITexture * pTLTex = m_pGeometry->getTexture(0);
+    ITexture * pBRTex = m_pGeometry->getTexture(7);
 
     if (m_pDoc->getWidth() != m_iInnerWidth)
     {
@@ -266,7 +288,6 @@ void guiContainer::updateSizeFit()
 // -----------------------------------------------------------------
 void guiContainer::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color docColor)
 {
-    CoordsScreen coords;
     if (!m_bVisible) {
         return;
     }
@@ -492,14 +513,9 @@ void guiContainer::onResize(int iOldWidth, int iOldHeight)
         return;
     if (m_pGeometry != NULL)
     {
-        ITexture * texlist[8] = { ((IGeometryQuads*)m_pGeometry)->getTexture(0), ((IGeometryQuads*)m_pGeometry)->getTexture(1), ((IGeometryQuads*)m_pGeometry)->getTexture(2), ((IGeometryQuads*)m_pGeometry)->getTexture(3), ((IGeometryQuads*)m_pGeometry)->getTexture(4), ((IGeometryQuads*)m_pGeometry)->getTexture(5), ((IGeometryQuads*)m_pGeometry)->getTexture(6), ((IGeometryQuads*)m_pGeometry)->getTexture(7) };
-        m_iInnerWidth = m_iWidth - m_iXOffset - texlist[0]->getWidth() - texlist[7]->getWidth();
-        m_iInnerHeight = m_iHeight - m_iYOffset - texlist[0]->getHeight() - texlist[7]->getHeight();
-
-        QuadData ** pQuads;
-        int nQuads = computeQuadsList(&pQuads, texlist);
-        ((IGeometryQuads*)m_pGeometry)->build(nQuads, pQuads);
-        QuadData::releaseQuads(nQuads, pQuads);
+        m_iInnerWidth = m_iWidth - m_iXOffset - m_pGeometry->getTexture(0)->getWidth() - m_pGeometry->getTexture(7)->getWidth();
+        m_iInnerHeight = m_iHeight - m_iYOffset - m_pGeometry->getTexture(0)->getHeight() - m_pGeometry->getTexture(7)->getHeight();
+        rebuildGeometry();
         m_pStencilGeometry->build(m_iInnerWidth, m_iInnerHeight);
     }
 

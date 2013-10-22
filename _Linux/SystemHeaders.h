@@ -4,11 +4,6 @@
 #include <stdlib.h>
 #include <errno.h>
 
-//#include <GL/glew.h>
-//#include <GL/glu.h>
-//#include <GL/glut.h>
-//#include <png.h>
-
 #include <cstring>
 #include <iostream>
 #include <sstream>

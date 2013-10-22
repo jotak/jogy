@@ -8,16 +8,16 @@
 // Name : guiButton
 //  Constructor
 // -----------------------------------------------------------------
-guiButton::guiButton() : guiImage()
+guiButton::guiButton() : guiComponent()
 {
-    m_ClickOption = None;
-    m_OverOption = None;
+    m_ClickedOption = None;
+    m_HoverOption = None;
     m_bMouseDown = m_bMouseOver = false;
     m_bClickState = false;
     m_pLabel = new guiLabel();
     m_pGeometryClicked = NULL;
-    m_pGeometryOver = NULL;
-    m_pGeometryNormal = NULL;
+    m_pGeometryHover = NULL;
+    m_pGeometryBase = NULL;
     m_pGeometryAttachedImage = NULL;
     m_bCatchButton2Events = false;
     m_bCatchDoubleClicks = false;
@@ -34,18 +34,17 @@ guiButton::~guiButton()
 {
     FREE(m_pLabel);
     FREE(m_pGeometryClicked);
-    FREE(m_pGeometryOver);
+    FREE(m_pGeometryHover);
     FREE(m_pGeometryAttachedImage);
-    m_pGeometry = m_pGeometryNormal;
+    FREE(m_pGeometryBase);
 }
 
 // -----------------------------------------------------------------
 // Name : withLabel
 // -----------------------------------------------------------------
-guiButton * guiButton::withLabel(string sText, fontid fontId, Color textColor, IGeometryQuads * pLabelGeo)
+guiButton * guiButton::withLabel(string sText, fontid fontId, Color textColor, IGeometryText * pLabelGeo)
 {
-	m_pLabel->withCpntId("ButtonLabel")
-			->withPosition(0, 0)
+	m_pLabel->withPosition(0, 0)
 			->withDimensions(0, 0);
 	m_pLabel->withText(sText, fontId, textColor)
 			->withGeometry(pLabelGeo);
@@ -53,9 +52,20 @@ guiButton * guiButton::withLabel(string sText, fontid fontId, Color textColor, I
 }
 
 // -----------------------------------------------------------------
-// Name : withClickTexture
+// Name : withBaseGeometry
 // -----------------------------------------------------------------
-guiButton * guiButton::withClickTexture(ITexture * pTex, IGeometryQuads * pGeo)
+guiButton * guiButton::withBaseGeometry(ITexture * pTex, IGeometryQuads * pGeo)
+{
+    m_pGeometryBase = pGeo;
+    QuadData quad(0, m_iWidth, 0, m_iHeight, pTex);
+    pGeo->build(&quad);
+	return this;
+}
+
+// -----------------------------------------------------------------
+// Name : withClickedGeometry
+// -----------------------------------------------------------------
+guiButton * guiButton::withClickedGeometry(ITexture * pTex, IGeometryQuads * pGeo)
 {
     m_pGeometryClicked = pGeo;
     QuadData quad(0, m_iWidth, 0, m_iHeight, pTex);
@@ -64,11 +74,11 @@ guiButton * guiButton::withClickTexture(ITexture * pTex, IGeometryQuads * pGeo)
 }
 
 // -----------------------------------------------------------------
-// Name : withOverTexture
+// Name : withHoverGeometry
 // -----------------------------------------------------------------
-guiButton * guiButton::withOverTexture(ITexture * pTex, IGeometryQuads * pGeo)
+guiButton * guiButton::withHoverGeometry(ITexture * pTex, IGeometryQuads * pGeo)
 {
-    m_pGeometryOver = pGeo;
+    m_pGeometryHover = pGeo;
     QuadData quad(0, m_iWidth, 0, m_iHeight, pTex);
     pGeo->build(&quad);
 	return this;
@@ -77,11 +87,10 @@ guiButton * guiButton::withOverTexture(ITexture * pTex, IGeometryQuads * pGeo)
 // -----------------------------------------------------------------
 // Name : build
 // -----------------------------------------------------------------
-guiButton * guiButton::build(ITexture * pTex)
+guiButton * guiButton::build()
 {
-    guiImage::build(pTex);
+    guiComponent::build();
     m_pLabel->centerOn(this);
-    m_pGeometryNormal = (IGeometryQuads*) m_pGeometry;
     return this;
 }
 
@@ -90,7 +99,7 @@ guiButton * guiButton::build(ITexture * pTex)
 // -----------------------------------------------------------------
 void guiButton::update(double delta)
 {
-    guiImage::update(delta);
+    guiComponent::update(delta);
     if (m_bEnabled && m_bVisible && m_bMultiClicks && m_bMouseDown && m_bMouseOver && m_fMultiClicksTimer > 0)
     {
         m_fMultiClicksTimer -= delta;
@@ -107,23 +116,22 @@ void guiButton::update(double delta)
 // -----------------------------------------------------------------
 void guiButton::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color docColor)
 {
-    if (m_bVisible)
-    {
-        m_pGeometry = m_pGeometryNormal;
+    if (m_bVisible) {
+    	IGeometry * pGeoToDisplay = m_pGeometryBase;
         bool bNeedPop = false;
         bool bAddMode = false;
         if (m_bClickState)
         {
-            switch (m_ClickOption)
+            switch (m_ClickedOption)
             {
             case None:
                 break;
             case ReplaceTex:
-                m_pGeometry = m_pGeometryClicked;
+            	pGeoToDisplay = m_pGeometryClicked;
                 break;
             case AddTex:
-                guiImage::displayAt(iXOffset, iYOffset, cpntColor, docColor);
-                m_pGeometry = m_pGeometryClicked;
+            	pGeoToDisplay->display(iXOffset, iYOffset, cpntColor * docColor);
+            	pGeoToDisplay = m_pGeometryClicked;
                 break;
             case Decal:
                 iXOffset += 3;
@@ -154,16 +162,16 @@ void guiButton::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color doc
         	Color c(1,1,1,0.3f);
             cpntColor.multiply(&c);
         } else if (m_bMouseOver && !m_bClickState) {
-            switch (m_OverOption)
+            switch (m_HoverOption)
             {
             case None:
                 break;
             case ReplaceTex:
-                m_pGeometry = m_pGeometryOver;
+            	pGeoToDisplay = m_pGeometryHover;
                 break;
             case AddTex:
-                guiImage::displayAt(iXOffset, iYOffset, cpntColor, docColor);
-                m_pGeometry = m_pGeometryOver;
+            	pGeoToDisplay->display(iXOffset, iYOffset, cpntColor * docColor);
+            	pGeoToDisplay = m_pGeometryHover;
                 break;
             case Decal:
                 iXOffset += 3;
@@ -193,7 +201,7 @@ void guiButton::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color doc
         if (bAddMode) {
             bPrevMode = Jogy::interface->setAdditive(true);
         }
-        guiImage::displayAt(iXOffset, iYOffset, cpntColor, docColor);
+        pGeoToDisplay->display(iXOffset, iYOffset, cpntColor * docColor);
         m_pLabel->displayAt(iXOffset, iYOffset, cpntColor, docColor);
         if (m_pGeometryAttachedImage != NULL) {
             m_pGeometryAttachedImage->display(m_iXPxl + iXOffset, m_iYPxl + iYOffset, cpntColor * m_DiffuseColor);
@@ -301,23 +309,36 @@ void guiButton::onCursorMoveOutEvent()
 // -----------------------------------------------------------------
 void guiButton::onResize(int iOldWidth, int iOldHeight)
 {
-    IGeometry * ptmp = m_pGeometry;
-    m_pGeometry = m_pGeometryNormal;
-    guiImage::onResize(iOldWidth, iOldHeight);
-    m_pGeometry = m_pGeometryClicked;
-    guiImage::onResize(iOldWidth, iOldHeight);
-    m_pGeometry = m_pGeometryAttachedImage;
-    guiImage::onResize(iOldWidth, iOldHeight);
-    m_pGeometry = ptmp;
+    if (iOldWidth == m_iWidth && iOldHeight == m_iHeight) {
+        return;
+    }
+
+    if (m_pGeometryBase != NULL) {
+        QuadData quad(0, m_iWidth, 0, m_iHeight, m_pGeometryBase->getTexture());
+        m_pGeometryBase->build(&quad);
+    }
+    if (m_pGeometryClicked != NULL) {
+        QuadData quad(0, m_iWidth, 0, m_iHeight, m_pGeometryClicked->getTexture());
+        m_pGeometryClicked->build(&quad);
+    }
+    if (m_pGeometryAttachedImage != NULL) {
+        QuadData quad(0, m_iWidth, 0, m_iHeight, m_pGeometryAttachedImage->getTexture());
+        m_pGeometryAttachedImage->build(&quad);
+    }
+    if (m_pGeometryHover != NULL) {
+        QuadData quad(0, m_iWidth, 0, m_iHeight, m_pGeometryHover->getTexture());
+        m_pGeometryHover->build(&quad);
+    }
+
     m_pLabel->centerOn(this);
 }
 
 // -----------------------------------------------------------------
-// Name : setNormalTexture
+// Name : setBaseTexture
 // -----------------------------------------------------------------
-void guiButton::setNormalTexture(ITexture * pTex)
+void guiButton::setBaseTexture(ITexture * pTex)
 {
-    m_pGeometryNormal->setTexture(pTex);
+    m_pGeometryBase->setTexture(pTex);
 }
 
 // -----------------------------------------------------------------
@@ -387,7 +408,7 @@ void guiButton::attachImage(ITexture * pTex, IGeometryQuads * pImageGeo)
 // -----------------------------------------------------------------
 void guiButton::setEnabled(bool bEnabled)
 {
-    guiImage::setEnabled(bEnabled);
+    guiComponent::setEnabled(bEnabled);
     if (!bEnabled)
     {
         m_bMouseDown = m_bMouseOver = false;

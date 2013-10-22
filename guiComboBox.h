@@ -41,8 +41,34 @@ public:
     int getSelectedItemId();
     u16 getItemsCount();
 
-    // Clone / init
-    virtual void init(Texture ** pMainTex, Texture * pDocTex, Color textColor, FontId fontId, FrameFitBehavior wfit, FrameFitBehavior hfit, int iMaxWidth, int iMaxHeight, Texture * btnTex1, Texture * btnTex2, BtnClickOptions btnClickOpt, int btnHeight, Texture ** frameTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl);
+    // Builder
+    virtual guiComboBox * build();
+    guiComboBox * withMainGeometry(ITexture ** pTex, IGeometryQuads * pGeo);
+    guiComboBox * withTextStyle(Color textColor, fontid fontId, IGeometryText * pLabelGeo) {
+    	m_pLabel->withText("", fontId, textColor);
+    	m_pListButtonTemplate->withLabel("", fontId, textColor, pLabelGeo);
+    	return this;
+    }
+    guiComboBox * withMaxListDimensions(int w, int h) {
+    	m_pList->withMaxDimensions(w, h); return this;
+    }
+    guiComboBox * withListGeometries(ITexture ** pTex, IGeometryQuads * pGeo, ITexture * pDocTex, IGeometryQuads * pDocGeo) {
+    	m_pList->withGeometry(pTex, pGeo);
+    	m_pList->getDocument()->withGeometry(pDocTex, pDocGeo);
+    	return this;
+    }
+    guiComboBox * withListButtonHover(InputBehaviour opt) {
+    	m_pListButtonTemplate->withInputBehaviour(None, opt); return this;
+    }
+    guiComboBox * withListButtonGeometry(ITexture * pTex, IGeometryQuads * pGeo) {
+    	m_pListButtonTemplate->withBaseGeometry(pTex, pGeo); return this;
+    }
+    guiComboBox * withListButtonHoverGeometry(ITexture * pTex, IGeometryQuads * pGeo) {
+    	m_pListButtonTemplate->withHoverGeometry(pTex, pGeo); return this;
+    }
+    guiComboBox * withListButtonHeight(int h) {
+    	m_pListButtonTemplate->withDimensions(0, h); return this;
+    }
 
 protected:
     void centerLabel();
@@ -51,9 +77,10 @@ protected:
     guiContainer * m_pList;
     guiButton * m_pListButtonTemplate;
     double m_dListPos;
+    IGeometryQuads * m_pMainGeometry;
 
 private:
-    int computeQuadsList(QuadData *** pQuads, Texture ** pTextures);
+    void rebuildGeometry();
 };
 
 #endif

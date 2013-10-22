@@ -49,7 +49,7 @@ public:
     void centerOnScreen();
 
     // Builder
-    virtual guiFrame * build(ITexture ** pMainTexs);
+    virtual guiFrame * build();
     guiFrame * withFramePositionType(FramePosition positionType) {
     	m_PositionType = positionType; return this;
     }

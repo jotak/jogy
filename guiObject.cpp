@@ -6,7 +6,7 @@ int guiObject::m_aiAllFonts[];
 // Name : guiObject
 //  Constructor
 // -----------------------------------------------------------------
-guiObject::guiObject() : GraphicObject(), m_DiffuseColor(1,1,1,1)
+guiObject::guiObject() : m_DiffuseColor(1,1,1,1)
 {
     m_iXPxl = 0;
     m_iYPxl = 0;

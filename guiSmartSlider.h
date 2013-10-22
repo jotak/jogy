@@ -23,7 +23,7 @@ public:
 
     // Inherited functions
     virtual void init(int iItemSize, int iSpacing, FontId fontId, Color textColor, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl);
-    virtual u32 getType() { return guiComponent::getType() | GOTYPE_SMARTSLIDER; };
+    virtual u32 getType() { return GOTYPE_SMARTSLIDER; };
     virtual void displayAt(int iXOffset, int iYOffset, Color cpntColor, Color docColor);
 
     // Input functions

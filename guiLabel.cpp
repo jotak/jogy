@@ -13,6 +13,7 @@ guiLabel::guiLabel() : guiComponent()
     m_iBoxWidth = 0;
     m_bCatchClicks = false;
     m_pComponentOwner = NULL;
+    m_pGeometry = NULL;
 }
 
 // -----------------------------------------------------------------
@@ -21,6 +22,7 @@ guiLabel::guiLabel() : guiComponent()
 // -----------------------------------------------------------------
 guiLabel::~guiLabel()
 {
+	FREE(m_pGeometry);
 }
 
 // -----------------------------------------------------------------
@@ -76,7 +78,7 @@ void guiLabel::computeGeometry()
     }
     setWidth(Jogy::interface->computeTextWidth(m_sText, m_aiAllFonts[m_FontId]));
     setHeight(Jogy::interface->computeTextHeight(m_sText, m_aiAllFonts[m_FontId]));
-    ((IGeometryText*)m_pGeometry)->setText(m_sText, m_aiAllFonts[m_FontId]);
+    m_pGeometry->setText(m_sText, m_aiAllFonts[m_FontId]);
 }
 
 // -----------------------------------------------------------------

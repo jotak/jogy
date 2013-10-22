@@ -9,6 +9,7 @@
 // -----------------------------------------------------------------
 guiDocument::guiDocument()
 {
+	m_pGeometry = NULL;
     m_pFocusedComponent = NULL;
     m_bNeedDestroy = false;
     m_bContentChanged = false;
@@ -23,6 +24,7 @@ guiDocument::guiDocument()
 // -----------------------------------------------------------------
 guiDocument::~guiDocument()
 {
+	FREE(m_pGeometry);
     FREEVEC(m_pComponentsList);
 }
 
@@ -32,7 +34,19 @@ guiDocument::~guiDocument()
 guiDocument * guiDocument::build()
 {
     guiObject::build();
+    rebuildGeometry();
     onLoad();
+}
+
+// -----------------------------------------------------------------
+// Name : withGeometry
+// -----------------------------------------------------------------
+guiDocument * guiDocument::withGeometry(ITexture * pTex, IGeometryQuads * pGeo)
+{
+    m_pGeometry = pGeo;
+    QuadData quad(0, 1, 0, 1, pTex);
+    pGeo->build(&quad);
+	return this;
 }
 
 // -----------------------------------------------------------------
@@ -61,6 +75,15 @@ void guiDocument::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color d
 		pCpnt->displayAt(m_iXPxl + iXOffset, m_iYPxl + iYOffset, cpntColor, docColor);
     }
     m_bContentChanged = false;
+}
+
+// -----------------------------------------------------------------
+// Name : rebuildGeometry
+// -----------------------------------------------------------------
+void guiDocument::rebuildGeometry()
+{
+    QuadData quad(0, m_iWidth, 0, m_iHeight, m_pGeometry->getTexture());
+    m_pGeometry->build(&quad);
 }
 
 // -----------------------------------------------------------------
@@ -132,8 +155,7 @@ void guiDocument::onResize(int iOldWidth, int iOldHeight)
         return;
     }
     if (m_pGeometry != NULL) {
-        QuadData quad(0, m_iWidth, 0, m_iHeight, ((IGeometryQuads*)m_pGeometry)->getTexture());
-        ((IGeometryQuads*)m_pGeometry)->build(&quad);
+    	rebuildGeometry();
     }
 }
 

@@ -9,6 +9,7 @@ guiImage::guiImage() : guiComponent()
 {
     m_iWidth = m_iHeight = -1;
     m_bCatchClicks = false;
+    m_pGeometry = NULL;
 }
 
 // -----------------------------------------------------------------
@@ -17,23 +18,33 @@ guiImage::guiImage() : guiComponent()
 // -----------------------------------------------------------------
 guiImage::~guiImage()
 {
+	FREE(m_pGeometry);
 }
 
 // -----------------------------------------------------------------
 // Name : build
 // -----------------------------------------------------------------
-guiImage * guiImage::build(ITexture * pTex)
+guiImage * guiImage::build()
 {
     guiComponent::build();
     if (m_iWidth < 0) {
-    	m_iWidth = pTex->getWidth();
+    	m_iWidth = m_pGeometry->getTexture()->getWidth();
     }
     if (m_iHeight < 0) {
-    	m_iHeight = pTex->getHeight();
+    	m_iHeight = m_pGeometry->getTexture()->getHeight();
     }
-    QuadData quad(0, m_iWidth, 0, m_iHeight, pTex);
-    ((IGeometryQuads*)m_pGeometry)->build(&quad);
     return this;
+}
+
+// -----------------------------------------------------------------
+// Name : withGeometry
+// -----------------------------------------------------------------
+guiImage * guiImage::withGeometry(ITexture * pTex, IGeometryQuads * pGeo)
+{
+    m_pGeometry = pGeo;
+    QuadData quad(0, m_iWidth, 0, m_iHeight, pTex);
+    pGeo->build(&quad);
+	return this;
 }
 
 // -----------------------------------------------------------------
@@ -56,10 +67,9 @@ void guiImage::onResize(int iOldWidth, int iOldHeight)
     if (iOldWidth == m_iWidth && iOldHeight == m_iHeight) {
         return;
     }
-    if (m_pGeometry != NULL)
-    {
-        QuadData quad(0, m_iWidth, 0, m_iHeight, ((IGeometryQuads*)m_pGeometry)->getTexture());
-        ((IGeometryQuads*)m_pGeometry)->build(&quad);
+    if (m_pGeometry != NULL) {
+        QuadData quad(0, m_iWidth, 0, m_iHeight, m_pGeometry->getTexture());
+        m_pGeometry->build(&quad);
     }
 }
 
@@ -81,7 +91,7 @@ guiObject * guiImage::onButtonEvent(ButtonAction * pEvent)
 ITexture * guiImage::getImageTexture()
 {
     if (m_pGeometry) {
-        return ((IGeometryQuads*)m_pGeometry)->getTexture();
+        return m_pGeometry->getTexture();
     }
     return NULL;
 }
@@ -92,6 +102,6 @@ ITexture * guiImage::getImageTexture()
 void guiImage::setImageTexture(ITexture * pTex)
 {
     if (m_pGeometry) {
-        ((IGeometryQuads*)m_pGeometry)->setTexture(pTex);
+        m_pGeometry->setTexture(pTex);
     }
 }

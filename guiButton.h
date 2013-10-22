@@ -1,7 +1,6 @@
 #ifndef _GUI_BUTTON_H
 #define _GUI_BUTTON_H
 
-#include "guiImage.h"
 #include "guiLabel.h"
 #include "Geometries/IGeometryQuads.h"
 #include "Utils/ButtonAction.h"
@@ -19,7 +18,7 @@ enum InputBehaviour
 // must return false if resulting in a closing event
 typedef tr1::function<bool (ComponentOwnerInterface*)> ClickCallback;
 
-class guiButton : public guiImage
+class guiButton : public guiComponent
 {
 public:
     // Constructor / destructor
@@ -27,7 +26,7 @@ public:
     virtual ~guiButton();
 
     // Inherited functions
-    virtual u32 getType() { return guiComponent::getType() | GOTYPE_BUTTON; };
+    virtual u32 getType() { return GOTYPE_BUTTON; };
     virtual void update(double delta);
     virtual void displayAt(int iXOffset, int iYOffset, Color cpntColor, Color docColor);
     virtual void moveTo(int xPxl, int yPxl);
@@ -44,18 +43,20 @@ public:
     void setText(string sText);
     void setFontId(fontid id) { m_pLabel->setFontId(id); };
     void setTextColor(Color textColor) { m_pLabel->setDiffuseColor(textColor); };
-    InputBehaviour getClickOption() { return m_ClickOption; };
-    InputBehaviour getOverOption() { return m_OverOption; };
-    void setClickOption(InputBehaviour clickOption) { m_ClickOption = clickOption; };
-    void setOverOption(InputBehaviour overOption) { m_OverOption = overOption; };
+    InputBehaviour getClickedOption() { return m_ClickedOption; };
+    InputBehaviour getHoverOption() { return m_HoverOption; };
+    void setClickedOption(InputBehaviour clickedOption) { m_ClickedOption = clickedOption; };
+    void setHoverOption(InputBehaviour hoverOption) { m_HoverOption = hoverOption; };
     IGeometryQuads * getClickedGeometry() { return m_pGeometryClicked; };
-    IGeometryQuads * getOverGeometry() { return m_pGeometryOver; };
-    IGeometryQuads * getNormalGeometry() { return m_pGeometryNormal; };
+    IGeometryQuads * getHoverGeometry() { return m_pGeometryHover; };
+    IGeometryQuads * getBaseGeometry() { return m_pGeometryBase; };
     void setCatchButton2Events(bool bCatch) { m_bCatchButton2Events = bCatch; };
     void setCatchDoubleClicks(bool bCatch) { m_bCatchDoubleClicks = bCatch; };
     void setMultiClicks(bool bMulti) { m_bMultiClicks = bMulti; };
-    void setNormalTexture(ITexture * pTex);
+    void setBaseTexture(ITexture * pTex);
     void setClickCallback(ClickCallback clickCallback) { m_ClickCallback = clickCallback; };
+    guiLabel * getLabel() { return m_pLabel; };
+
     bool doClick(ButtonAction * pEvent);
 
     // Size & position
@@ -67,23 +68,24 @@ public:
     void attachImage(ITexture * pTex, IGeometryQuads * pImageGeo);
 
     // Builder
-    virtual guiButton * build(ITexture * pTex);
-    guiButton * withInputBehaviour(InputBehaviour clickBehaviour, InputBehaviour overBehaviour) {
-    	m_ClickOption = clickBehaviour; m_OverOption = overBehaviour; return this;
+    virtual guiButton * build();
+    guiButton * withInputBehaviour(InputBehaviour clickedBehaviour, InputBehaviour hoverBehaviour) {
+    	m_ClickedOption = clickedBehaviour; m_HoverOption = hoverBehaviour; return this;
     }
-    guiButton * withLabel(string sText, fontid fontId, Color textColor, IGeometryQuads * pLabelGeo);
-    guiButton * withClickTexture(ITexture * pTex, IGeometryQuads * pGeo);
-    guiButton * withOverTexture(ITexture * pTex, IGeometryQuads * pGeo);
+    guiButton * withLabel(string sText, fontid fontId, Color textColor, IGeometryText * pLabelGeo);
+    guiButton * withBaseGeometry(ITexture * pTex, IGeometryQuads * pGeo);
+    guiButton * withClickedGeometry(ITexture * pTex, IGeometryQuads * pGeo);
+    guiButton * withHoverGeometry(ITexture * pTex, IGeometryQuads * pGeo);
 
 protected:
     bool m_bMouseDown;
     bool m_bMouseOver;
     guiLabel * m_pLabel;
-    InputBehaviour m_ClickOption;
-    InputBehaviour m_OverOption;
+    InputBehaviour m_ClickedOption;
+    InputBehaviour m_HoverOption;
     IGeometryQuads * m_pGeometryClicked;
-    IGeometryQuads * m_pGeometryOver;
-    IGeometryQuads * m_pGeometryNormal;
+    IGeometryQuads * m_pGeometryHover;
+    IGeometryQuads * m_pGeometryBase;
     IGeometryQuads * m_pGeometryAttachedImage;
     bool m_bClickState;
     bool m_bCatchButton2Events;

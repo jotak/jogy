@@ -1,15 +1,9 @@
 #ifndef _GUI_EDITBOX_H
 #define _GUI_EDITBOX_H
 
-#include "../Input/KeyboardListener.h"
 #include "guiComponent.h"
 
-class GeometryQuads;
-class StencilGeometry;
-class GeometryText;
-class QuadData;
-
-class guiEditBox : public guiComponent, public KeyboardListener
+class guiEditBox : public guiComponent
 {
 public:
     // Constructor / destructor
@@ -17,7 +11,7 @@ public:
     virtual ~guiEditBox();
 
     // Inherited functions
-    virtual u32 getType() { return guiComponent::getType() | GOTYPE_EDITBOX; };
+    virtual u32 getType() { return GOTYPE_EDITBOX; };
     virtual bool onKeyDown(unsigned char c);
     virtual bool onSpecialKeyDown(int key);
 
@@ -33,8 +27,8 @@ public:
     virtual void onResize(int iOldWidth, int iOldHeight);
 
     // Member access
-    FontId getFontId() { return m_FontId; };
-    void setFontId(FontId id) { m_FontId = id; };
+    fontid getFontId() { return m_FontId; };
+    void setFontId(fontid id) { m_FontId = id; };
     void setTextColor(Color textColor) { m_TextColor = textColor; };
     Color getTextColor() { return m_TextColor; };
     void setText(string sText);
@@ -42,14 +36,18 @@ public:
     void setNbLines(int iNbLines) { m_iNbLines = iNbLines; };
     int getNbLines() { return m_iNbLines; };
 
+    // Builder
+    virtual guiEditBox * build(ITexture * pTex);
+    guiEditBox * withInputBehaviour(InputBehaviour clickBehaviour, InputBehaviour overBehaviour) {
+    	m_ClickOption = clickBehaviour; m_OverOption = overBehaviour; return this;
+    }
+    guiEditBox * withLabel(string sText, fontid fontId, Color textColor, IGeometryQuads * pLabelGeo);
+
     // Clone / init
-    virtual void init(Texture * pCaretTex, string sText, FontId fontId, Color textColor, int iNbLines, bool bMultiLines, Texture ** pMainTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl);
+    virtual void init(Texture * pCaretTex, string sText, fontid fontId, Color textColor, int iNbLines, bool bMultiLines, Texture ** pMainTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl);
 
     // Other
     void setFocus();
-
-    // Static default constructors
-    static guiEditBox * createDefaultEditBox(int iNbLines, bool bMultiLines, int wPxl, string sId);
 
 protected:
     void updateSelectionGeometry();
@@ -61,14 +59,14 @@ protected:
     void onButton1Drag(int xPxl, int yPxl);
     void onButton1DoubleClick(int xPxl, int yPxl);
 
-    StencilGeometry * m_pStencilGeometry;
-    GeometryText * m_pTextGeometry;
-    GeometryQuads * m_pCaretGeometry;
-    GeometryQuads * m_pSelectionGeometry;
+    IStencilGeometry * m_pStencilGeometry;
+    IGeometryText * m_pTextGeometry;
+    IGeometryQuads * m_pCaretGeometry;
+    IGeometryQuads * m_pSelectionGeometry;
     int m_iNbLines;
     bool m_bMultiLines;
     string m_sText;
-    FontId m_FontId;
+    fontid m_FontId;
     Color m_TextColor;
     int m_iCaretPos;
     bool m_bHasFocus;

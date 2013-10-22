@@ -2,6 +2,7 @@
 #define _GUI_LABEL_H
 
 #include "guiComponent.h"
+#include "Geometries/IGeometryText.h"
 
 class guiLabel : public guiComponent
 {
@@ -10,7 +11,7 @@ public:
     virtual ~guiLabel();
 
     // Inherited functions
-    virtual u32 getType() { return guiComponent::getType() | GOTYPE_LABEL; };
+    virtual u32 getType() { return GOTYPE_LABEL; };
     virtual void displayAt(int iXOffset, int iYOffset, Color cpntColor, Color docColor);
     virtual guiObject * onButtonEvent(ButtonAction * pEvent);
 
@@ -23,11 +24,15 @@ public:
     string getText() { return m_sText; };
     void setCatchClicks(bool b) { m_bCatchClicks = b; };
     void setComponentOwner(guiComponent * pOwner) { m_pComponentOwner = pOwner; };
+    IGeometryText * getGeometry() { return m_pGeometry; };
 
     // Builder
     virtual guiLabel * build();
     guiLabel * withText(string sText, fontid fontId, Color textColor) {
     	m_sText = sText; m_FontId = fontId; setDiffuseColor(textColor); return this;
+    }
+    guiLabel * withGeometry(IGeometryText * pGeo) {
+    	m_pGeometry = pGeo; return this;
     }
 
 protected:
@@ -38,6 +43,7 @@ protected:
     int m_iBoxWidth;
     bool m_bCatchClicks;
     guiComponent * m_pComponentOwner;
+    IGeometryText * m_pGeometry;
 };
 
 #endif

@@ -3,8 +3,6 @@
 
 #include "guiComponent.h"
 
-class GeometryQuads;
-
 class guiGauge : public guiComponent
 {
 public:
@@ -23,25 +21,24 @@ public:
     void setValue(int iVal);
 
     // Builder
-    virtual guiGauge * build(ITexture * pFgTex, ITexture * pBgTex);
+    virtual guiGauge * build();
     guiGauge * withGauge(int reference, int value) {
     	m_iRefValue = reference; m_iCurValue = value; return this;
     }
     guiGauge * withColor(Color color) {
     	m_Color = color; return this;
     }
-    guiGauge * withForeground(IGeometryQuads * pFgGeo) {
-    	m_pForegroundGeometry = pFgGeo; return this;
-    }
-    guiGauge * withBackground(IGeometryQuads * pBgGeo) {
-    	withGeometry(pBgGeo); return this;
-    }
+    guiGauge * withForeground(ITexture * pTex, IGeometryQuads * pGeo);
+    guiGauge * withBackground(ITexture * pTex, IGeometryQuads * pGeo);
 
-protected:
+private:
     IGeometryQuads * m_pForegroundGeometry;
+    IGeometryQuads * m_pBackgroundGeometry;
     int m_iRefValue;
     int m_iCurValue;
     Color m_Color;
+
+    void rebuildGeometries();
 };
 
 #endif

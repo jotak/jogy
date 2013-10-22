@@ -2,7 +2,7 @@
 #define _GUI_IMAGE_H
 
 #include "guiComponent.h"
-#include "Utils/ITexture.h"
+#include "Geometries/IGeometryQuads.h"
 
 class guiImage : public guiComponent
 {
@@ -24,10 +24,12 @@ public:
     void setImageTexture(ITexture * pTex);
 
     // Builder
-    virtual guiImage * build(ITexture * pTex);
+    virtual guiImage * build();
+    guiImage * withGeometry(ITexture * pTex, IGeometryQuads * pGeo);
 
 protected:
     bool m_bCatchClicks;
+    IGeometryQuads * m_pGeometry;
 };
 
 #endif

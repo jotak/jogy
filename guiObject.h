@@ -1,15 +1,26 @@
 #ifndef _GUI_OBJECT_H
 #define _GUI_OBJECT_H
 
-#include "Utils/GraphicObject.h"
+#include "Utils/BaseObject.h"
+#include "Utils/ButtonAction.h"
+
+#define GOTYPE_NOTHING      0x00000000
+#define GOTYPE_CONTAINER    0x00000001
+#define GOTYPE_FRAME        0x00000002
+#define GOTYPE_TBDFRAME     0x00000004
+#define GOTYPE_BUTTON       0x00000008
+#define GOTYPE_LABEL        0x00000010
+#define GOTYPE_TOGGLEBUTTON 0x00000020
+#define GOTYPE_DOCUMENT     0x00000040
+#define GOTYPE_EDITBOX      0x00000080
+#define GOTYPE_SMARTSLIDER  0x00000100
+
 
 #define MAX_FONTS    5
 
 typedef unsigned char fontid;
 
-class ButtonAction;
-
-class guiObject : public GraphicObject
+class guiObject : public BaseObject
 {
 public:
     guiObject();
@@ -52,6 +63,7 @@ public:
     // Other
     Color getDiffuseColor() { return m_DiffuseColor; };
     void setDiffuseColor(Color color) { m_DiffuseColor = color; };
+    virtual u32 getType() = 0;
 
     // Builder
     virtual guiObject * build() { return this; };
@@ -60,9 +72,6 @@ public:
     }
     guiObject * withDimensions(int w, int h) {
     	m_iWidth = w; m_iHeight = h; return this;
-    }
-    guiObject * withGeometry(IGeometry * pGeometry) {
-    	m_pGeometry = pGeometry; return this;
     }
 
 protected:

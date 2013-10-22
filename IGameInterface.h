@@ -1,7 +1,6 @@
 #ifndef _IGAME_INTERFACE_H
 #define _IGAME_INTERFACE_H
 
-#include "Geometries/IGeometry.h"
 #include "guiObject.h"
 
 class IGameInterface
@@ -20,6 +19,8 @@ public:
     virtual unsigned computeTextHeight(string text, fontid font) = 0;
     virtual unsigned getScreenWidth() = 0;
     virtual unsigned getScreenHeight() = 0;
+    virtual void displayFront(guiObject*, int, int, Color, Color) = 0;
+    virtual void cancelDisplayFront(guiObject*) = 0;
 };
 
 #endif

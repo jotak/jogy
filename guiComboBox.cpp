@@ -1,11 +1,15 @@
 #include "guiComboBox.h"
 
+#define LABEL_XOFFSET	5
+#define LABEL_YOFFSET	3
+
 // -----------------------------------------------------------------
 // Name : guiComboBox
 //  Constructor
-// -----------------------------------------------------------------
+// ---------------------------------------------
 guiComboBox::guiComboBox() : guiComponent()
 {
+	m_pMainGeometry = NULL;
     m_pLabel = new guiLabel();
     m_pList = new guiContainer();
     m_pList->setDocument(new guiDocument());
@@ -20,68 +24,70 @@ guiComboBox::guiComboBox() : guiComponent()
 // -----------------------------------------------------------------
 guiComboBox::~guiComboBox()
 {
-    _interface->cancelTopDisplay(m_pList);
+    Jogy::interface->cancelDisplayFront(m_pList);
     delete m_pList;
     delete m_pLabel;
     delete m_pListButtonTemplate;
+    FREE(m_pMainGeometry);
 }
 
 // -----------------------------------------------------------------
-// Name : init
+// Name : build
 // -----------------------------------------------------------------
-void guiComboBox::init(Texture ** pMainTex, Texture * pDocTex, Color textColor, FontId fontId, FrameFitBehavior wfit, FrameFitBehavior hfit, int iMaxWidth, int iMaxHeight, Texture * btnTex1, Texture * btnTex2, BtnClickOptions btnClickOpt, int btnHeight, Texture ** frameTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl)
+guiComboBox * guiComboBox::build()
 {
-    guiComponent::init(sCpntId, xPxl, yPxl, wPxl, hPxl);
-    m_pLabel->init("", fontId, textColor, "", xPxl + 5, yPxl + 3, 0, 0);
-    m_pList->init(wfit, hfit, 0, 0, iMaxWidth, iMaxHeight, frameTexs, "ComboContainer", xPxl, yPxl + hPxl, wPxl, iMaxHeight);
-    m_pList->getDocument()->init("ComboDoc", pDocTex, 0, 0, m_pList->getInnerWidth(), m_pList->getInnerHeight());
-    m_pListButtonTemplate->init("", fontId, textColor, NULL, BCO_None, btnTex2, btnClickOpt, btnTex1, "TemplateComboButton", 0, 0, m_pList->getInnerWidth(), btnHeight);
+    guiComponent::build();
 
-    QuadData ** pQuads;
-    int nQuads = computeQuadsList(&pQuads, pMainTex);
-    m_pGeometry = new GeometryQuads(nQuads, pQuads, VB_Static);
-    QuadData::releaseQuads(nQuads, pQuads);
+    // Build label
+    m_pLabel->withPosition(m_iXPxl + LABEL_XOFFSET, m_iYPxl + LABEL_YOFFSET);
+    m_pLabel->build();
+
+    // Build inner list
+    m_pList->withFrameFitBehavior(FB_FitDocumentToFrame, FB_FitFrameToDocumentWhenSmaller)
+    		->withPosition(m_iXPxl, m_iYPxl + m_iHeight)
+    		->withDimensions(m_iWidth, m_pList->getMaxHeight());
+    m_pList->build();
+
+    // Build list's document
+    m_pList->getDocument()->withDimensions(m_pList->getInnerWidth(), m_pList->getInnerHeight());
+    m_pList->getDocument()->build();
+
+    // Configure list buttons
+    m_pListButtonTemplate->withDimensions(m_pList->getInnerWidth(), m_pListButtonTemplate->getHeight());
+    m_pListButtonTemplate->withInputBehaviour(None, m_pListButtonTemplate->getHoverOption());
+
+    rebuildGeometry();
+
+    return this;
 }
 
 // -----------------------------------------------------------------
-// Name : clone
+// Name : withMainGeometry
 // -----------------------------------------------------------------
-guiObject * guiComboBox::clone()
+guiComboBox * guiComboBox::withMainGeometry(ITexture ** pTex, IGeometryQuads * pGeo)
 {
-    Texture * texlist[3] = { ((GeometryQuads*)m_pGeometry)->getTexture(0), ((GeometryQuads*)m_pGeometry)->getTexture(1), ((GeometryQuads*)m_pGeometry)->getTexture(2) };
-    GeometryQuads * pListGeo = (GeometryQuads*) m_pList->getGeometry();
-    Texture * lsttexlist[8] = { pListGeo->getTexture(0), pListGeo->getTexture(1), pListGeo->getTexture(2), pListGeo->getTexture(3), pListGeo->getTexture(4), pListGeo->getTexture(5), pListGeo->getTexture(6), pListGeo->getTexture(7) };
-    guiComboBox * pObj = new guiComboBox();
-    pObj->init(
-        texlist,
-        ((GeometryQuads*)m_pList->getDocument()->getGeometry())->getTexture(),
-        m_pLabel->getDiffuseColor(),
-        m_pLabel->getFontId(),
-        m_pList->getWidthFitBehavior(),
-        m_pList->getHeightFitBehavior(),
-        m_pList->getMaxWidth(),
-        m_pList->getMaxHeight(),
-        m_pListButtonTemplate->getNormalGeometry()->getTexture(),
-        m_pListButtonTemplate->getClickedGeometry()->getTexture(),
-        m_pListButtonTemplate->getClickOption(),
-        m_pListButtonTemplate->getHeight(),
-        lsttexlist,
-        m_sCpntId, m_iXPxl, m_iYPxl, m_iWidth, m_iHeight);
-    return pObj;
+    m_pMainGeometry = pGeo;
+    QuadData ** pQuads = new QuadData*[3];
+    pQuads[0] = new QuadData(0, 1, 0, 3, pTex[0]);
+    pQuads[1] = new QuadData(1, 2, 0, 3, pTex[1]);
+    pQuads[2] = new QuadData(2, 3, 0, 3, pTex[2]);
+    m_pMainGeometry->build(3, pQuads);
+	return this;
 }
 
 // -----------------------------------------------------------------
-// Name : computeQuadsList
+// Name : rebuildGeometry
 // -----------------------------------------------------------------
-int guiComboBox::computeQuadsList(QuadData *** pQuads, Texture ** pTextures)
+void guiComboBox::rebuildGeometry()
 {
-    *pQuads = new QuadData*[3];
-    int xPxlMiddleStart = pTextures[0]->getWidth();
-    int xPxlMiddleEnd = m_iWidth - pTextures[2]->getWidth();
-    (*pQuads)[0] = new QuadData(0, xPxlMiddleStart, 0, m_iHeight, pTextures[0]);
-    (*pQuads)[1] = new QuadData(xPxlMiddleStart, xPxlMiddleEnd, 0, m_iHeight, pTextures[1]);
-    (*pQuads)[2] = new QuadData(xPxlMiddleEnd, m_iWidth, 0, m_iHeight, pTextures[2]);
-    return 3;
+    QuadData ** pQuads = new QuadData*[3];
+    int xPxlMiddleStart = m_pMainGeometry->getTexture(0)->getWidth();
+    int xPxlMiddleEnd = m_iWidth - m_pMainGeometry->getTexture(2)->getWidth();
+    pQuads[0] = new QuadData(0, xPxlMiddleStart, 0, m_iHeight, m_pMainGeometry->getTexture(0));
+    pQuads[1] = new QuadData(xPxlMiddleStart, xPxlMiddleEnd, 0, m_iHeight, m_pMainGeometry->getTexture(1));
+    pQuads[2] = new QuadData(xPxlMiddleEnd, m_iWidth, 0, m_iHeight, m_pMainGeometry->getTexture(2));
+    m_pMainGeometry->build(3, pQuads);
+    QuadData::releaseQuads(3, pQuads);
 }
 
 // -----------------------------------------------------------------
@@ -110,8 +116,7 @@ void guiComboBox::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color d
     if (!m_bVisible) {
         return;
     }
-    CoordsScreen coords = CoordsScreen(m_iXPxl + iXOffset, m_iYPxl + iYOffset, GUIPLANE);
-    m_pGeometry->display(coords, cpntColor);
+    m_pMainGeometry->display(m_iXPxl + iXOffset, m_iYPxl + iYOffset, cpntColor);
     m_pLabel->displayAt(iXOffset, iYOffset, cpntColor, docColor);
 
     if (m_pList->isVisible())
@@ -125,7 +130,7 @@ void guiComboBox::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color d
         if (docColor.a >= 0) {
             docColor.a = (docColor.a + 3) / 4;
         }
-        _interface->topDisplay(m_pList, iXOffset, iYOffset, &cpntColor, &docColor);
+        Jogy::interface->displayFront(m_pList, iXOffset, iYOffset, cpntColor, docColor);
     }
 }
 
@@ -203,9 +208,17 @@ bool guiComboBox::isAt(int xPxl, int yPxl)
 guiButton * guiComboBox::addString(string sText, string sId)
 {
     // Create button
-    guiButton * pBtn = (guiButton*) m_pListButtonTemplate->clone();
-    pBtn->setId(sId);
-    pBtn->setText(sText);
+    guiButton * pBtn = new guiButton();
+    pBtn->withInputBehaviour(m_pListButtonTemplate->getClickedOption(), m_pListButtonTemplate->getHoverOption())
+    		->withLabel(
+    				sText,
+    				m_pListButtonTemplate->getLabel()->getFontId(),
+    				m_pListButtonTemplate->getLabel()->getDiffuseColor(),
+    				(IGeometryText*) m_pListButtonTemplate->getLabel()->getGeometry()->clone())
+    		->withHoverGeometry(m_pListButtonTemplate->getHoverGeometry()->getTexture(),
+    				(IGeometryQuads*) m_pListButtonTemplate->getHoverGeometry()->clone())
+    		->withCpntId(sId)
+    		->withDimensions(m_pListButtonTemplate->getWidth(), m_pListButtonTemplate->getHeight());
 
     // Find lowest existing button in list
     int yPxl = 0;
@@ -317,13 +330,8 @@ void guiComboBox::onResize(int iOldWidth, int iOldHeight)
         return;
     m_pList->setWidth(m_iWidth);
     centerLabel();
-    if (m_pGeometry != NULL)
-    {
-    	Texture * texlist[3] = { ((GeometryQuads*)m_pGeometry)->getTexture(0), ((GeometryQuads*)m_pGeometry)->getTexture(1), ((GeometryQuads*)m_pGeometry)->getTexture(2) };
-        QuadData ** pQuads;
-        int nQuads = computeQuadsList(&pQuads, texlist);
-        ((GeometryQuads*)m_pGeometry)->modify(nQuads, pQuads);
-        QuadData::releaseQuads(nQuads, pQuads);
+    if (m_pMainGeometry != NULL) {
+        rebuildGeometry();
     }
 }
 
@@ -332,10 +340,10 @@ void guiComboBox::onResize(int iOldWidth, int iOldHeight)
 // -----------------------------------------------------------------
 void guiComboBox::centerLabel()
 {
-    if (m_pGeometry != NULL)
+    if (m_pMainGeometry != NULL)
     {
-        int w1 = ((GeometryQuads*)m_pGeometry)->getTexture(0)->getWidth();
-        int w2 = getWidth() - ((GeometryQuads*)m_pGeometry)->getTexture(2)->getWidth() - w1;
+        int w1 = m_pMainGeometry->getTexture(0)->getWidth();
+        int w2 = getWidth() - m_pMainGeometry->getTexture(2)->getWidth() - w1;
         m_pLabel->moveTo(getXPos() + w1 + w2 / 2 - m_pLabel->getWidth() / 2, getYPos() + getHeight() / 2 - m_pLabel->getHeight() / 2);
     }
 }

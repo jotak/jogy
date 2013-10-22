@@ -35,7 +35,7 @@ public:
     virtual ~guiContainer();
 
     // Inherited functions
-    virtual u32 getType() { return guiComponent::getType() | GOTYPE_CONTAINER; };
+    virtual u32 getType() { return GOTYPE_CONTAINER; };
     virtual void setVisible(bool bVisible);
 
     // Update / display
@@ -80,7 +80,7 @@ public:
     void setMaxHeight(int height) { m_iMaxHeight = height; };
 
     // Builder
-    virtual guiContainer * build(ITexture ** pMainTexs);
+    virtual guiContainer * build();
     guiContainer * withFrameFitBehavior(FrameFitBehavior widthFit, FrameFitBehavior heightFit) {
     	m_WidthFit = widthFit; m_HeightFit = heightFit; return this;
     }
@@ -93,6 +93,7 @@ public:
     guiContainer * withStencil(IStencilGeometry * pStencil) {
     	m_pStencilGeometry = pStencil; return this;
     }
+    guiContainer * withGeometry(ITexture ** pTex, IGeometryQuads * pGeo);
 
     // Static data
     static void initStatic(IGeometryQuads ** scrollGeometries, ITexture ** scrollTextures);
@@ -106,6 +107,7 @@ protected:
     int m_iInnerWidth;
     int m_iInnerHeight;
     guiDocument * m_pDoc;
+    IGeometryQuads * m_pGeometry;
     IStencilGeometry * m_pStencilGeometry;
     static IGeometryQuads * m_pScrollButtons[4];   // top, bottom, left, right
     ScrollButtonData m_ScrollButtonsData[4];       // top, bottom, left, right
@@ -119,7 +121,7 @@ protected:
     int m_iYOffset;
 
 private:
-    int computeQuadsList(QuadData *** pQuads, ITexture ** pTextures);
+    void rebuildGeometry();
     void stepScroll(int iDir);  // 0=top, 1=bottom, 2=left, 3=right
 };
 
