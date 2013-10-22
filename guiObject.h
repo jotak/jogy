@@ -26,9 +26,6 @@ public:
     guiObject();
     virtual ~guiObject();
 
-    // Texture(s) registration
-    static void registerTextures(const fontid * pFonts, unsigned int nbFonts);
-
     // Update / display
     virtual void update(double delta) {};
     virtual void displayAt(int iXOffset, int iYOffset, Color cpntColor, Color docColor) = 0;
@@ -81,8 +78,6 @@ protected:
     int m_iHeight;
     string m_sTooltip;
     Color m_DiffuseColor;
-
-    static fontid m_aiAllFonts[MAX_FONTS];
 };
 
 #endif

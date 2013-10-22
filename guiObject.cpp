@@ -1,7 +1,5 @@
 #include "guiObject.h"
 
-int guiObject::m_aiAllFonts[];
-
 // -----------------------------------------------------------------
 // Name : guiObject
 //  Constructor
@@ -103,13 +101,4 @@ void guiObject::vCenterOn(guiObject * pOther)
 void guiObject::hCenterOn(guiObject * pOther)
 {
     moveTo(pOther->getXPos() + (pOther->getWidth() - getWidth()) / 2, getYPos());
-}
-
-// -----------------------------------------------------------------
-// Name : registerTextures
-//  Static function
-// -----------------------------------------------------------------
-void guiObject::registerTextures(const fontid * pFonts, unsigned int nbFonts)
-{
-	memcpy(m_aiAllFonts, pFonts, nbFonts * sizeof(fontid));
 }

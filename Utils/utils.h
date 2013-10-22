@@ -35,7 +35,6 @@ typedef long            s32;
 //#define FRAND100(max)			(((double)(rand()%100))*(double)(max)/100.0f)
 
 //#include "paths.h"
-#include "Coords.h"
 #include "Color.h"
 //#include "DisplayMode.h"
 
@@ -55,5 +54,7 @@ extern char * getStringFromClipboard(char * sBuffer, int iBufSize);
 //{
 //    To operator()(From p) { return static_cast<To>(p); }
 //};
+
+struct i2d { int x, y; };
 
 #endif

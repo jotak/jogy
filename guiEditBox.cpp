@@ -1,11 +1,4 @@
 #include "guiEditBox.h"
-#include "../Geometries/GeometryText.h"
-#include "../Geometries/GeometryQuads.h"
-#include "../Geometries/StencilGeometry.h"
-#include "../Input/InputEngine.h"
-#include "../Display/TextureEngine.h"
-#include "../Display/DisplayEngine.h"
-#include "../Fonts/FontEngine.h"
 
 #define CARET_BLINK_DELAY     0.4f
 
@@ -20,7 +13,7 @@ guiEditBox::guiEditBox() : m_TextColor(1.0f, 1.0f, 1.0f, 1.0f)
     m_pSelectionGeometry = NULL;
     m_iNbLines = 0;
     m_sText = "";
-    m_FontId = (FontId)0;
+    m_FontId = 0;
     m_iCaretPos = 0;
     m_bHasFocus = false;
     m_fBlinkTimer = 0;
@@ -28,88 +21,133 @@ guiEditBox::guiEditBox() : m_TextColor(1.0f, 1.0f, 1.0f, 1.0f)
     m_iSelectionStart = -1;
     m_bMultiLines = false;
     m_iSelectionEnd = 0;
+    m_pMainGeometry = NULL;
+    m_iXInnerOffset = 0;
+    m_iYInnerOffset = 0;
 }
 
 // -----------------------------------------------------------------
 // Name : ~guiEditBox
 //  Destructor
 // -----------------------------------------------------------------
-guiEditBox::~guiEditBox()
-{
+guiEditBox::~guiEditBox() {
     _input->unsetKeyboardListener(this);
     FREE(m_pStencilGeometry);
     FREE(m_pTextGeometry);
     FREE(m_pCaretGeometry);
     FREE(m_pSelectionGeometry);
+    FREE(m_pMainGeometry);
 }
 
 // -----------------------------------------------------------------
-// Name : init
+// Name : build
 // -----------------------------------------------------------------
-void guiEditBox::init(Texture * pCaretTex, string sText, FontId fontId, Color textColor, int iNbLines, bool bMultiLines, Texture ** pMainTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl)
-{
-    guiComponent::init(sCpntId, xPxl, yPxl, wPxl, hPxl);
-    m_FontId = fontId;
-    setText(sText);
-    m_TextColor = textColor;
-    m_bMultiLines = bMultiLines;
-    setNbLines(iNbLines);
+guiEditBox * guiEditBox::build() {
+    guiComponent::build();
 
-    Texture * pTLTex = pMainTexs[0];
-    Texture * pBRTex = pMainTexs[8];
+    ITexture * pTLTex = m_pMainGeometry->getTexture(0);
+    ITexture * pBRTex = m_pMainGeometry->getTexture(8);
 
     // Set height according to number of lines
-    setHeight(pTLTex->getHeight() + pBRTex->getHeight() + m_iNbLines * _font->getFontHeight(m_aiAllFonts[(int)m_FontId]));
+    setHeight(pTLTex->getHeight() + pBRTex->getHeight()
+    		+ m_iNbLines * Jogy::interface->computeTextHeight(NULL, m_FontId));
 
-    // Main geometry (borders & background)
-    QuadData ** pQuads;
-    int nQuads = computeQuadsList(&pQuads, pMainTexs);
-    m_pGeometry = new GeometryQuads(nQuads, pQuads, VB_Static);
-    QuadData::releaseQuads(nQuads, pQuads);
+    rebuildMainGeometry();
 
-    // Stencil
-    m_pStencilGeometry = new StencilGeometry(m_iWidth - pTLTex->getWidth() - pBRTex->getWidth(), m_iHeight - pTLTex->getHeight() - pBRTex->getHeight(), VB_Static);
+    ITexture * pTex = m_pMainGeometry->getTexture(0);
+    m_iXInnerOffset = pTex->getWidth();
+    m_iYInnerOffset = pTex->getHeight();
 
-    // Text
-    m_pTextGeometry = new GeometryText(m_sText, m_aiAllFonts[(int)m_FontId], VB_Static);
-
-    // Caret
-    QuadData quad(0, pCaretTex->getWidth(), 0, pCaretTex->getHeight(), pCaretTex);
-    m_pCaretGeometry = new GeometryQuads(&quad, VB_Static);
+    return this;
 }
 
 // -----------------------------------------------------------------
-// Name : clone
+// Name : withMainGeometry
 // -----------------------------------------------------------------
-guiObject * guiEditBox::clone()
+guiEditBox * guiEditBox::withMainGeometry(ITexture ** pTex, IGeometryQuads * pGeo)
 {
-    Texture * texlist[9] = { ((GeometryQuads*)m_pGeometry)->getTexture(0), ((GeometryQuads*)m_pGeometry)->getTexture(1), ((GeometryQuads*)m_pGeometry)->getTexture(2), ((GeometryQuads*)m_pGeometry)->getTexture(3), ((GeometryQuads*)m_pGeometry)->getTexture(4), ((GeometryQuads*)m_pGeometry)->getTexture(5), ((GeometryQuads*)m_pGeometry)->getTexture(6), ((GeometryQuads*)m_pGeometry)->getTexture(7), ((GeometryQuads*)m_pGeometry)->getTexture(8) };
-    guiEditBox * pObj = new guiEditBox();
-    pObj->init(m_pCaretGeometry->getTexture(), m_sText, m_FontId, m_TextColor, m_iNbLines, m_bMultiLines, texlist, m_sCpntId, m_iXPxl, m_iYPxl, m_iWidth, m_iHeight);
-    return pObj;
+    // Main geometry (borders & background)
+    m_pMainGeometry = pGeo;
+
+    // 9 Quads
+    QuadData ** pQuads = new QuadData*[9];
+    pQuads[0] = new QuadData(0, 1, 0, 1, pTex[0]);
+    pQuads[1] = new QuadData(1, 2, 0, 1, pTex[1]);
+    pQuads[2] = new QuadData(2, 3, 0, 1, pTex[2]);
+    pQuads[3] = new QuadData(0, 1, 1, 2, pTex[3]);
+    pQuads[4] = new QuadData(1, 2, 1, 2, pTex[4]);
+    pQuads[5] = new QuadData(2, 3, 1, 2, pTex[5]);
+    pQuads[6] = new QuadData(0, 1, 2, 3, pTex[6]);
+    pQuads[7] = new QuadData(1, 2, 2, 3, pTex[7]);
+    pQuads[8] = new QuadData(2, 3, 2, 3, pTex[8]);
+    m_pMainGeometry->build(9, pQuads);
+    QuadData::releaseQuads(9, pQuads);
+
+    return this;
 }
 
 // -----------------------------------------------------------------
-// Name : computeQuadsList
+// Name : withCaretGeometry
 // -----------------------------------------------------------------
-int guiEditBox::computeQuadsList(QuadData *** pQuads, Texture ** pTextures)
+guiEditBox * guiEditBox::withCaretGeometry(ITexture * pTex, IGeometryQuads * pGeo) {
+    m_pCaretGeometry = pGeo;
+    QuadData quad(0, pTex->getWidth(), 0, pTex->getHeight(), pTex);
+    pGeo->build(&quad);
+	return this;
+}
+
+// -----------------------------------------------------------------
+// Name : withStencilGeometry
+// -----------------------------------------------------------------
+guiEditBox * guiEditBox::withStencilGeometry(ITexture * pTex, IStencilGeometry * pGeo) {
+    m_pStencilGeometry = pGeo;
+	return this;
+}
+
+// -----------------------------------------------------------------
+// Name : withSelectionGeometry
+// -----------------------------------------------------------------
+guiEditBox * guiEditBox::withSelectionGeometry(ITexture * pTex, IGeometryQuads * pGeo) {
+    m_pSelectionGeometry = pGeo;
+    QuadData quad(0, 1, 0, 1, pTex);
+    pGeo->build(&quad);
+	return this;
+}
+
+// -----------------------------------------------------------------
+// Name : withLabel
+// -----------------------------------------------------------------
+guiEditBox * guiEditBox::withLabel(string sText, fontid fontId, Color textColor, IGeometryText * pGeo) {
+    m_FontId = fontId;
+    m_sText = sText;
+    m_TextColor = textColor;
+    m_pTextGeometry = pGeo;
+	return this;
+}
+
+// -----------------------------------------------------------------
+// Name : rebuildMainGeometry
+// -----------------------------------------------------------------
+void guiEditBox::rebuildMainGeometry()
 {
     // 9 Quads
-    *pQuads = new QuadData*[9];
-    int xPxlMiddleStart = pTextures[0]->getWidth();
-    int xPxlMiddleEnd = m_iWidth - pTextures[2]->getWidth();
-    int yPxlMiddleStart = pTextures[0]->getHeight();
-    int yPxlMiddleEnd = m_iHeight - pTextures[5]->getHeight();
-    (*pQuads)[0] = new QuadData(0,               xPxlMiddleStart,  0,                yPxlMiddleStart,  pTextures[0]);
-    (*pQuads)[1] = new QuadData(xPxlMiddleStart, xPxlMiddleEnd,    0,                yPxlMiddleStart,  pTextures[1]);
-    (*pQuads)[2] = new QuadData(xPxlMiddleEnd,   m_iWidth,         0,                yPxlMiddleStart,  pTextures[2]);
-    (*pQuads)[3] = new QuadData(0,               xPxlMiddleStart,  yPxlMiddleStart,  yPxlMiddleEnd,    pTextures[3]);
-    (*pQuads)[4] = new QuadData(xPxlMiddleStart, xPxlMiddleEnd,    yPxlMiddleStart,  yPxlMiddleEnd,    pTextures[4]);
-    (*pQuads)[5] = new QuadData(xPxlMiddleEnd,   m_iWidth,         yPxlMiddleStart,  yPxlMiddleEnd,    pTextures[5]);
-    (*pQuads)[6] = new QuadData(0,               xPxlMiddleStart,  yPxlMiddleEnd,    m_iHeight,        pTextures[6]);
-    (*pQuads)[7] = new QuadData(xPxlMiddleStart, xPxlMiddleEnd,    yPxlMiddleEnd,    m_iHeight,        pTextures[7]);
-    (*pQuads)[8] = new QuadData(xPxlMiddleEnd,   m_iWidth,         yPxlMiddleEnd,    m_iHeight,        pTextures[8]);
-    return 9;
+    QuadData ** pQuads = new QuadData*[9];
+    int xPxlMiddleStart = m_pMainGeometry->getTexture(0)->getWidth();
+    int xPxlMiddleEnd = m_iWidth - m_pMainGeometry->getTexture(2)->getWidth();
+    int yPxlMiddleStart = m_pMainGeometry->getTexture(0)->getHeight();
+    int yPxlMiddleEnd = m_iHeight - m_pMainGeometry->getTexture(5)->getHeight();
+    pQuads[0] = new QuadData(0,               xPxlMiddleStart,  0,                yPxlMiddleStart,  m_pMainGeometry->getTexture(0));
+    pQuads[1] = new QuadData(xPxlMiddleStart, xPxlMiddleEnd,    0,                yPxlMiddleStart,  m_pMainGeometry->getTexture(1));
+    pQuads[2] = new QuadData(xPxlMiddleEnd,   m_iWidth,         0,                yPxlMiddleStart,  m_pMainGeometry->getTexture(2));
+    pQuads[3] = new QuadData(0,               xPxlMiddleStart,  yPxlMiddleStart,  yPxlMiddleEnd,    m_pMainGeometry->getTexture(3));
+    pQuads[4] = new QuadData(xPxlMiddleStart, xPxlMiddleEnd,    yPxlMiddleStart,  yPxlMiddleEnd,    m_pMainGeometry->getTexture(4));
+    pQuads[5] = new QuadData(xPxlMiddleEnd,   m_iWidth,         yPxlMiddleStart,  yPxlMiddleEnd,    m_pMainGeometry->getTexture(5));
+    pQuads[6] = new QuadData(0,               xPxlMiddleStart,  yPxlMiddleEnd,    m_iHeight,        m_pMainGeometry->getTexture(6));
+    pQuads[7] = new QuadData(xPxlMiddleStart, xPxlMiddleEnd,    yPxlMiddleEnd,    m_iHeight,        m_pMainGeometry->getTexture(7));
+    pQuads[8] = new QuadData(xPxlMiddleEnd,   m_iWidth,         yPxlMiddleEnd,    m_iHeight,        m_pMainGeometry->getTexture(8));
+
+    m_pMainGeometry->build(9, pQuads);
+    QuadData::releaseQuads(9, pQuads);
 }
 
 // -----------------------------------------------------------------
@@ -137,35 +175,37 @@ void guiEditBox::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color do
     }
 
     // display borders and background
-    CoordsScreen coords = CoordsScreen(m_iXPxl + iXOffset, m_iYPxl + iYOffset, GUIPLANE);
-    m_pGeometry->display(coords, cpntColor);
+    int x = m_iXPxl + iXOffset;
+    int y = m_iYPxl + iYOffset;
+    m_pMainGeometry->display(x, y, cpntColor);
 
-    Texture * pTex = ((GeometryQuads*)m_pGeometry)->getTexture(0);
-    coords += CoordsScreen(pTex->getWidth(), pTex->getHeight());
-    CoordsScreen stencilCoords = coords;
-    m_pStencilGeometry->fillStencil(stencilCoords, true);
-    int iPreviousState = _display->setStencilState(2);
-    { // Stencil display block
-        coords += CoordsScreen(m_iXScrollPos, m_iYScrollPos);
+    x += m_iXInnerOffset;
+    y += m_iYInnerOffset;
+    int xStencil = x;
+    int yStencil = y;
 
-        if (m_pSelectionGeometry != NULL)
-        {
-            // display selection
-            m_pSelectionGeometry->display(coords, Color(0.8,0.8,0.8));
-        }
+    m_pStencilGeometry->fillStencil(xStencil, yStencil, true);
+//TODO in fillStencil:     int iPreviousState = _display->setStencilState(2);
+    // Stencil display block
 
-        // draw text
-        m_pTextGeometry->display(coords, cpntColor * m_TextColor);
+    x += m_iXScrollPos;
+    y += m_iYScrollPos;
 
-        if (m_bHasFocus && m_fBlinkTimer >= 0)
-        {
-            // Display caret
-            coords += _font->getCharacterPosition(m_iCaretPos, m_sText, m_aiAllFonts[(int)m_FontId]);
-            m_pCaretGeometry->display(coords, cpntColor);
-        }
+    if (hasSelectedText()) {
+    	// display selection
+    	m_pSelectionGeometry->display(x, y, Color(0.8,0.8,0.8));
     }
-    m_pStencilGeometry->fillStencil(stencilCoords, false);
-    _display->setStencilState(iPreviousState);
+
+    // draw text
+    m_pTextGeometry->display(x, y, cpntColor * m_TextColor);
+
+    if (m_bHasFocus && m_fBlinkTimer >= 0) {
+    	// Display caret
+    	i2d pos = Jogy::interface->getCharPosInText(m_iCaretPos, m_sText, m_FontId);
+    	m_pCaretGeometry->display(x + pos.x, y + pos.y, cpntColor);
+    }
+    m_pStencilGeometry->fillStencil(xStencil, yStencil, false);
+//TODO:     _display->setStencilState(iPreviousState);
 }
 
 // -----------------------------------------------------------------
@@ -219,22 +259,24 @@ void guiEditBox::onButton1Down(int xPxl, int yPxl)
 {
     m_bHasFocus = true;
     _input->setKeyboardListener(this);
-    FREE(m_pSelectionGeometry);
+    deselect();
 
-    Texture * pTex1 = ((GeometryQuads*)m_pGeometry)->getTexture(0);
-    Texture * pTex2 = ((GeometryQuads*)m_pGeometry)->getTexture(8);
-    CoordsScreen cs(xPxl - m_iXPxl - pTex1->getWidth(), yPxl - m_iYPxl - pTex1->getHeight());
-    m_iCaretPos = _font->getCharacterPosition(cs, m_sText, m_aiAllFonts[(int)m_FontId]);
+    ITexture * pTex1 = m_pMainGeometry->getTexture(0);
+    ITexture * pTex2 = m_pMainGeometry->getTexture(8);
+    m_iCaretPos = Jogy::interface->getCharIdxInText(xPxl - m_iXPxl - pTex1->getWidth(),
+    		yPxl - m_iYPxl - pTex1->getHeight(),
+    		m_sText, m_FontId);
 
-    cs = _font->getCharacterPosition(m_iCaretPos, m_sText, m_aiAllFonts[(int)m_FontId]);
-    if (cs.x > getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) {
-        m_iXScrollPos = (getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) - cs.x - 4;
-    } else if (cs.x + m_iXScrollPos < 0) {
+    i2d pos = Jogy::interface->getCharPosInText(m_iCaretPos, m_sText, m_FontId);
+    if (pos.x > getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) {
+        m_iXScrollPos = (getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) - pos.x - 4;
+    } else if (pos.x + m_iXScrollPos < 0) {
         m_iXScrollPos = 0;
     }
-    if (cs.y + _font->getFontHeight(m_aiAllFonts[(int)m_FontId]) > getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) {
-        m_iYScrollPos = (getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) - cs.y - _font->getFontHeight(m_aiAllFonts[(int)m_FontId]);
-    } else if (cs.y + m_iYScrollPos < 0) {
+    int fontHeight = Jogy::interface->computeTextHeight(NULL, m_FontId);
+    if (pos.y + fontHeight > getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) {
+        m_iYScrollPos = (getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) - pos.y - fontHeight;
+    } else if (pos.y + m_iYScrollPos < 0) {
         m_iYScrollPos = 0;
     }
     m_fBlinkTimer = 0;
@@ -245,13 +287,15 @@ void guiEditBox::onButton1Down(int xPxl, int yPxl)
 // -----------------------------------------------------------------
 void guiEditBox::onButton1Drag(int xPxl, int yPxl)
 {
-    if (m_pSelectionGeometry == NULL) {
+    if (!hasSelectedText()) {
         m_iSelectionStart = m_iSelectionEnd = m_iCaretPos;
     }
     int oldCaretPos = m_iCaretPos;
-    Texture * pTex1 = ((GeometryQuads*)m_pGeometry)->getTexture(0);
-    Texture * pTex2 = ((GeometryQuads*)m_pGeometry)->getTexture(8);
-    m_iCaretPos = _font->getCharacterPosition(CoordsScreen(xPxl - m_iXPxl - pTex1->getWidth(), yPxl - m_iYPxl - pTex1->getHeight()), m_sText, m_aiAllFonts[(int)m_FontId]);
+    ITexture * pTex1 = m_pMainGeometry->getTexture(0);
+    ITexture * pTex2 = m_pMainGeometry->getTexture(8);
+    m_iCaretPos = Jogy::interface->getCharIdxInText(xPxl - m_iXPxl - pTex1->getWidth(),
+    		yPxl - m_iYPxl - pTex1->getHeight(),
+    		m_sText, m_FontId);
 
     if (oldCaretPos != m_iCaretPos) {
         if (m_iCaretPos < m_iSelectionStart)  {
@@ -266,9 +310,7 @@ void guiEditBox::onButton1Drag(int xPxl, int yPxl)
                 m_iSelectionStart = m_iSelectionEnd;
                 m_iSelectionEnd = m_iCaretPos;
                 updateSelectionGeometry();
-            } else if (m_iSelectionStart == m_iSelectionEnd) {
-                FREE(m_pSelectionGeometry);
-            } else {
+            } else if (m_iSelectionStart != m_iSelectionEnd) {
                 updateSelectionGeometry();
             }
         } else if (oldCaretPos == m_iSelectionEnd) {
@@ -277,21 +319,20 @@ void guiEditBox::onButton1Drag(int xPxl, int yPxl)
                 m_iSelectionEnd = m_iSelectionStart;
                 m_iSelectionStart = m_iCaretPos;
                 updateSelectionGeometry();
-            } else if (m_iSelectionStart == m_iSelectionEnd) {
-                FREE(m_pSelectionGeometry);
-            } else {
+            } else if (m_iSelectionStart != m_iSelectionEnd) {
                 updateSelectionGeometry();
             }
         }
-        CoordsScreen cs = _font->getCharacterPosition(m_iCaretPos, m_sText, m_aiAllFonts[(int)m_FontId]);
-        if (cs.x > getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) {
-            m_iXScrollPos = (getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) - cs.x - 4;
-        } else if (cs.x + m_iXScrollPos < 0) {
+        i2d pos = Jogy::interface->getCharPosInText(m_iCaretPos, m_sText, m_FontId);
+        if (pos.x > getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) {
+            m_iXScrollPos = (getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) - pos.x - 4;
+        } else if (pos.x + m_iXScrollPos < 0) {
             m_iXScrollPos = 0;
         }
-        if (cs.y + _font->getFontHeight(m_aiAllFonts[(int)m_FontId]) > getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) {
-            m_iYScrollPos = (getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) - cs.y - _font->getFontHeight(m_aiAllFonts[(int)m_FontId]);
-        } else if (cs.y + m_iYScrollPos < 0) {
+        int fontHeight = Jogy::interface->computeTextHeight(NULL, m_FontId);
+        if (pos.y + fontHeight > getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) {
+            m_iYScrollPos = (getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) - pos.y - fontHeight;
+        } else if (pos.y + m_iYScrollPos < 0) {
             m_iYScrollPos = 0;
         }
         m_fBlinkTimer = 0;
@@ -307,20 +348,19 @@ void guiEditBox::onButton1DoubleClick(int xPxl, int yPxl)
     m_iCaretPos = m_iSelectionEnd = getEndOfWord(m_iCaretPos);
     if (m_iSelectionEnd != m_iSelectionStart) {
         updateSelectionGeometry();
-    } else {
-        FREE(m_pSelectionGeometry);
     }
-    Texture * pTex1 = ((GeometryQuads*)m_pGeometry)->getTexture(0);
-    Texture * pTex2 = ((GeometryQuads*)m_pGeometry)->getTexture(8);
-    CoordsScreen cs = _font->getCharacterPosition(m_iCaretPos, m_sText, m_aiAllFonts[(int)m_FontId]);
-    if (cs.x > getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) {
-        m_iXScrollPos = (getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) - cs.x - 4;
-    } else if (cs.x + m_iXScrollPos < 0) {
+    ITexture * pTex1 = m_pMainGeometry->getTexture(0);
+    ITexture * pTex2 = m_pMainGeometry->getTexture(8);
+    i2d pos = Jogy::interface->getCharPosInText(m_iCaretPos, m_sText, m_FontId);
+    if (pos.x > getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) {
+        m_iXScrollPos = (getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) - pos.x - 4;
+    } else if (pos.x + m_iXScrollPos < 0) {
         m_iXScrollPos = 0;
     }
-    if (cs.y + _font->getFontHeight(m_aiAllFonts[(int)m_FontId]) > getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) {
-        m_iYScrollPos = (getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) - cs.y - _font->getFontHeight(m_aiAllFonts[(int)m_FontId]);
-    } else if (cs.y + m_iYScrollPos < 0) {
+    int fontHeight = Jogy::interface->computeTextHeight(NULL, m_FontId);
+    if (pos.y + fontHeight > getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) {
+        m_iYScrollPos = (getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) - pos.y - fontHeight;
+    } else if (pos.y + m_iYScrollPos < 0) {
         m_iYScrollPos = 0;
     }
     m_fBlinkTimer = 0;
@@ -346,7 +386,7 @@ bool guiEditBox::onKeyDown(unsigned char c)
         {
             if (c == 22 || c == 24 || c == 3) // Ctrl+c/v/x : copy/paste/cut ; TODO : does it work in other systems?
             {
-                if (m_pSelectionGeometry != NULL) // find current selection
+                if (hasSelectedText()) // find current selection
                 {
                     if (c == 3 || c == 24) // get selected text
                     {
@@ -361,7 +401,6 @@ bool guiEditBox::onKeyDown(unsigned char c)
                     }
                     if (c == 24 || c == 22) // delete current selection
                     {
-                        FREE(m_pSelectionGeometry);
                         int nDel = m_iSelectionEnd - m_iSelectionStart;
                         m_iCaretPos = m_iSelectionStart;
                         int iLength = m_sText.length();
@@ -369,8 +408,9 @@ bool guiEditBox::onKeyDown(unsigned char c)
                             m_sText[i] = m_sText[i+nDel];
                         }
                         if (m_pTextGeometry != NULL) {
-                            ((GeometryText*)m_pTextGeometry)->setText(m_sText, m_aiAllFonts[(int)m_FontId]);
+                            m_pTextGeometry->setText(m_sText, m_FontId);
                         }
+                    	deselect();
                     }
                 }
                 if (c == 22) // paste
@@ -388,7 +428,7 @@ bool guiEditBox::onKeyDown(unsigned char c)
                     }
                     m_iCaretPos += iBufLen;
                     if (m_pTextGeometry != NULL) {
-                    	((GeometryText*)m_pTextGeometry)->setText(m_sText, m_aiAllFonts[(int)m_FontId]);
+                    	m_pTextGeometry->setText(m_sText, m_FontId);
                     }
                 }
             }
@@ -402,30 +442,30 @@ bool guiEditBox::onKeyDown(unsigned char c)
         }
         if (c == 8) // backspace
         {
-            if (m_iCaretPos == 0 && m_pSelectionGeometry == NULL) {
+            if (m_iCaretPos == 0 && !hasSelectedText()) {
                 return true;
             }
             // move backward and delete
-            if (m_pSelectionGeometry == NULL) {
+            if (!hasSelectedText()) {
                 m_iCaretPos--;
             }
             c = 127;
         }
-        if (c == 127 || m_pSelectionGeometry != NULL) // delete
+        if (c == 127 || hasSelectedText()) // delete
         {
             int nDel = 1;
-            if (m_pSelectionGeometry != NULL) // delete selection
+            if (hasSelectedText()) // delete selection
             {
-                FREE(m_pSelectionGeometry);
                 nDel = m_iSelectionEnd - m_iSelectionStart;
                 m_iCaretPos = m_iSelectionStart;
+                deselect();
             }
             int iLength = m_sText.length();
             for (int i = m_iCaretPos; i < 1 + iLength - nDel; i++) {
                 m_sText[i] = m_sText[i+nDel];
             }
             if (m_pTextGeometry != NULL) {
-                ((GeometryText*)m_pTextGeometry)->setText(m_sText, m_aiAllFonts[(int)m_FontId]);
+                m_pTextGeometry->setText(m_sText, m_FontId);
             }
         }
         if (c != 127)
@@ -439,21 +479,22 @@ bool guiEditBox::onKeyDown(unsigned char c)
             str[0] = (char) c;
             m_sText[m_iCaretPos] = str[0];
             if (m_pTextGeometry != NULL) {
-                ((GeometryText*)m_pTextGeometry)->setText(m_sText, m_aiAllFonts[(int)m_FontId]);
+                m_pTextGeometry->setText(m_sText, m_FontId);
             }
             m_iCaretPos++;
         }
-        Texture * pTex1 = ((GeometryQuads*)m_pGeometry)->getTexture(0);
-        Texture * pTex2 = ((GeometryQuads*)m_pGeometry)->getTexture(8);
-        CoordsScreen cs = _font->getCharacterPosition(m_iCaretPos, m_sText, m_aiAllFonts[(int)m_FontId]);
-        if (cs.x > getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) {
-            m_iXScrollPos = (getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) - cs.x - 4;
-        } else if (cs.x + m_iXScrollPos < 0) {
+        ITexture * pTex1 = m_pMainGeometry->getTexture(0);
+        ITexture * pTex2 = m_pMainGeometry->getTexture(8);
+        i2d pos = Jogy::interface->getCharPosInText(m_iCaretPos, m_sText, m_FontId);
+        if (pos.x > getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) {
+            m_iXScrollPos = (getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) - pos.x - 4;
+        } else if (pos.x + m_iXScrollPos < 0) {
             m_iXScrollPos = 0;
         }
-        if (cs.y + _font->getFontHeight(m_aiAllFonts[(int)m_FontId]) > getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) {
-            m_iYScrollPos = (getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) - cs.y - _font->getFontHeight(m_aiAllFonts[(int)m_FontId]);
-        } else if (cs.y + m_iYScrollPos < 0) {
+        int fontHeight = Jogy::interface->computeTextHeight(NULL, m_FontId);
+        if (pos.y + fontHeight > getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) {
+            m_iYScrollPos = (getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) - pos.y - fontHeight;
+        } else if (pos.y + m_iYScrollPos < 0) {
             m_iYScrollPos = 0;
         }
         m_fBlinkTimer = 0;
@@ -470,12 +511,12 @@ bool guiEditBox::onSpecialKeyDown(int key)
     if (m_bHasFocus) {
         int oldCaretPos = -1;
         if (_input->isShiftPressed()) {
-            if (m_pSelectionGeometry == NULL) {
+            if (!hasSelectedText()) {
                 m_iSelectionStart = m_iSelectionEnd = m_iCaretPos;
             }
             oldCaretPos = m_iCaretPos;
         } else {
-            FREE(m_pSelectionGeometry);
+        	deselect();
         }
         CoordsScreen cs;
         switch (key)
@@ -558,9 +599,7 @@ bool guiEditBox::onSpecialKeyDown(int key)
                     m_iSelectionStart = m_iSelectionEnd;
                     m_iSelectionEnd = m_iCaretPos;
                     updateSelectionGeometry();
-                } else if (m_iSelectionStart == m_iSelectionEnd) {
-                    FREE(m_pSelectionGeometry);
-                } else {
+                } else if (m_iSelectionStart != m_iSelectionEnd) {
                     updateSelectionGeometry();
                 }
             } else if (oldCaretPos == m_iSelectionEnd) {
@@ -569,9 +608,7 @@ bool guiEditBox::onSpecialKeyDown(int key)
                     m_iSelectionEnd = m_iSelectionStart;
                     m_iSelectionStart = m_iCaretPos;
                     updateSelectionGeometry();
-                } else if (m_iSelectionStart == m_iSelectionEnd) {
-                    FREE(m_pSelectionGeometry);
-                } else {
+                } else if (m_iSelectionStart != m_iSelectionEnd) {
                     updateSelectionGeometry();
                 }
             }
@@ -830,26 +867,26 @@ void guiEditBox::setFocus()
     _input->setKeyboardListener(this);
 }
 
-// -----------------------------------------------------------------
-// Name : createDefaultEditBox
-//  Static default constructor
-// -----------------------------------------------------------------
-guiEditBox * guiEditBox::createDefaultEditBox(int iNbLines, bool bMultiLines, int wPxl, string sId)
-{
-    Texture * iTexs[9];
-    iTexs[0] = _tex->findTexture("gui/interface:LstTL");
-    iTexs[1] = _tex->findTexture("gui/interface:LstTC");
-    iTexs[2] = _tex->findTexture("gui/interface:LstTR");
-    iTexs[3] = _tex->findTexture("gui/interface:LstCL");
-    iTexs[4] = _tex->findTexture("gui/interface:EditBg");
-    iTexs[5] = _tex->findTexture("gui/interface:LstCR");
-    iTexs[6] = _tex->findTexture("gui/interface:LstBL");
-    iTexs[7] = _tex->findTexture("gui/interface:LstBC");
-    iTexs[8] = _tex->findTexture("gui/interface:LstBR");
-    guiEditBox * pBox = new guiEditBox();
-    pBox->init(
-        _tex->findTexture("gui/interface:Caret"),
-        "", TEXT_FONT, TEXT_COLOR_DARK, iNbLines, bMultiLines, iTexs,
-        sId, 0, 0, wPxl, 1);
-    return pBox;
-}
+//// -----------------------------------------------------------------
+//// Name : createDefaultEditBox
+////  Static default constructor
+//// -----------------------------------------------------------------
+//guiEditBox * guiEditBox::createDefaultEditBox(int iNbLines, bool bMultiLines, int wPxl, string sId)
+//{
+//    Texture * iTexs[9];
+//    iTexs[0] = _tex->findTexture("gui/interface:LstTL");
+//    iTexs[1] = _tex->findTexture("gui/interface:LstTC");
+//    iTexs[2] = _tex->findTexture("gui/interface:LstTR");
+//    iTexs[3] = _tex->findTexture("gui/interface:LstCL");
+//    iTexs[4] = _tex->findTexture("gui/interface:EditBg");
+//    iTexs[5] = _tex->findTexture("gui/interface:LstCR");
+//    iTexs[6] = _tex->findTexture("gui/interface:LstBL");
+//    iTexs[7] = _tex->findTexture("gui/interface:LstBC");
+//    iTexs[8] = _tex->findTexture("gui/interface:LstBR");
+//    guiEditBox * pBox = new guiEditBox();
+//    pBox->init(
+//        _tex->findTexture("gui/interface:Caret"),
+//        "", TEXT_FONT, TEXT_COLOR_DARK, iNbLines, bMultiLines, iTexs,
+//        sId, 0, 0, wPxl, 1);
+//    return pBox;
+//}

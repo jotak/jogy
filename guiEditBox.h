@@ -2,6 +2,9 @@
 #define _GUI_EDITBOX_H
 
 #include "guiComponent.h"
+#include "Geometries/IGeometryQuads.h"
+#include "Geometries/IStencilGeometry.h"
+#include "Geometries/IGeometryText.h"
 
 class guiEditBox : public guiComponent
 {
@@ -36,18 +39,21 @@ public:
     void setNbLines(int iNbLines) { m_iNbLines = iNbLines; };
     int getNbLines() { return m_iNbLines; };
 
-    // Builder
-    virtual guiEditBox * build(ITexture * pTex);
-    guiEditBox * withInputBehaviour(InputBehaviour clickBehaviour, InputBehaviour overBehaviour) {
-    	m_ClickOption = clickBehaviour; m_OverOption = overBehaviour; return this;
-    }
-    guiEditBox * withLabel(string sText, fontid fontId, Color textColor, IGeometryQuads * pLabelGeo);
-
-    // Clone / init
-    virtual void init(Texture * pCaretTex, string sText, fontid fontId, Color textColor, int iNbLines, bool bMultiLines, Texture ** pMainTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl);
-
     // Other
     void setFocus();
+    bool hasSelectedText() { return m_iSelectionStart >= 0 && m_iSelectionStart != m_iSelectionEnd; };
+    void deselect() { m_iSelectionStart = -1; };
+
+    // Builder
+    virtual guiEditBox * build();
+    guiEditBox * withMainGeometry(ITexture ** pTex, IGeometryQuads * pGeo);
+    guiEditBox * withCaretGeometry(ITexture * pTex, IGeometryQuads * pGeo);
+    guiEditBox * withStencilGeometry(ITexture * pTex, IStencilGeometry * pGeo);
+    guiEditBox * withSelectionGeometry(ITexture * pTex, IGeometryQuads * pGeo);
+    guiEditBox * withLabel(string sText, fontid fontId, Color textColor, IGeometryText * pGeo);
+    guiEditBox * withLinesInfo(int iNbLines, bool bMultiLines) {
+    	m_iNbLines = iNbLines; m_bMultiLines = bMultiLines; return this;
+    }
 
 protected:
     void updateSelectionGeometry();
@@ -59,6 +65,7 @@ protected:
     void onButton1Drag(int xPxl, int yPxl);
     void onButton1DoubleClick(int xPxl, int yPxl);
 
+    IGeometryQuads * m_pMainGeometry;
     IStencilGeometry * m_pStencilGeometry;
     IGeometryText * m_pTextGeometry;
     IGeometryQuads * m_pCaretGeometry;
@@ -75,9 +82,11 @@ protected:
     int m_iYScrollPos;
     int m_iSelectionStart;
     int m_iSelectionEnd;
+    int m_iXInnerOffset;
+    int m_iYInnerOffset;
 
 private:
-    int computeQuadsList(QuadData *** pQuads, Texture ** pTextures);
+    void rebuildMainGeometry();
 };
 
 #endif

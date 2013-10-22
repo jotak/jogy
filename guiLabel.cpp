@@ -74,11 +74,11 @@ void guiLabel::setBoxWidth(int iWidth)
 void guiLabel::computeGeometry()
 {
     if (m_iBoxWidth > 0) {
-    	Jogy::interface->wrapText(m_sText, m_iBoxWidth, m_aiAllFonts[m_FontId]);
+    	Jogy::interface->wrapText(m_sText, m_iBoxWidth, m_FontId);
     }
-    setWidth(Jogy::interface->computeTextWidth(m_sText, m_aiAllFonts[m_FontId]));
-    setHeight(Jogy::interface->computeTextHeight(m_sText, m_aiAllFonts[m_FontId]));
-    m_pGeometry->setText(m_sText, m_aiAllFonts[m_FontId]);
+    setWidth(Jogy::interface->computeTextWidth(m_sText, m_FontId));
+    setHeight(Jogy::interface->computeTextHeight(m_sText, m_FontId));
+    m_pGeometry->setText(m_sText, m_FontId;
 }
 
 // -----------------------------------------------------------------
