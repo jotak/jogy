@@ -7,7 +7,7 @@
 class guiTabbedFrame_Document : public BaseObject
 {
 public:
-    guiTabbedFrame_Document(guiDocument * pDoc, FrameFitBehavior OldWidthFit, FrameFitBehavior OldHeightFit, fontid fontId);
+    guiTabbedFrame_Document(guiDocument*, FrameFitBehavior, FrameFitBehavior, guiLabel*);
     virtual ~guiTabbedFrame_Document();
     guiDocument * m_pDoc;
     guiLabel * m_pLabel;
@@ -30,7 +30,7 @@ public:
     virtual guiObject * onButtonEvent(ButtonAction * pEvent);
 
     // Document management
-    virtual void attachDocument(guiDocument * pDoc, FrameFitBehavior OldWidthFit, FrameFitBehavior OldHeightFit);
+    virtual void attachDocument(guiDocument * pDoc, FrameFitBehavior oldWidthFit, FrameFitBehavior oldHeightFit);
     virtual guiTabbedFrame_Document * detachDocument();
     void setMainDocument(guiDocument * pDoc);
 
@@ -43,21 +43,26 @@ public:
     virtual void moveTo(int xPxl, int yPxl);
 
     // Member access
-    void setFontId(fontid id) { m_FontId = id; };
-    void setPanelXDecal(int xdecal) { m_iXPanelDecal = xdecal; };
+    void setPanelXDecal(int xspace) { m_iXSpace = xspace; };
 
-    // Clone / init
-    virtual void init(Texture ** pTabTexs, FontId fontId, int xdecal, FramePosition positionType, FrameFitBehavior widthFit, FrameFitBehavior heightFit, int iMaxWidth, int iMaxHeight, Texture ** pMainTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl);
+    // Builder
+    virtual guiTabbedFrame * build();
+    guiTabbedFrame * withTabsGeometry(ITexture ** pTex, IGeometryQuads * pGeo, ITexture ** pSelTex, IGeometryQuads * pSelGeo);
+    guiTabbedFrame * withXSpace(int xspace) {
+    	m_iXSpace = xspace; return this;
+    }
+    guiTabbedFrame * withLabelInfo(fontid fontId, IGeometryText * pLabelGeo);
 
 protected:
+    guiLabel * m_pLabelTemplate;
     list<guiTabbedFrame_Document*> m_pDocumentsList;
     IGeometryQuads * m_pTabsGeometry;
-    int m_iXPanelDecal;
-    fontid m_FontId;
-    //Texture * m_pTexList[6];
+    IGeometryQuads * m_pUnselectedTabGeometry;
+    IGeometryQuads * m_pSelectedTabGeometry;
+    int m_iXSpace;
 
 private:
-    void computeGeometry();
+    void rebuildGeometry();
 };
 
 #endif

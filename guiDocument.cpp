@@ -36,6 +36,7 @@ guiDocument * guiDocument::build()
     guiObject::build();
     rebuildGeometry();
     onLoad();
+    return this;
 }
 
 // -----------------------------------------------------------------

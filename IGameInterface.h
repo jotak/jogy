@@ -3,6 +3,8 @@
 
 #include "guiObject.h"
 
+class Vertex;
+
 class IGameInterface
 {
 public:

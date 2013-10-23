@@ -72,6 +72,7 @@ guiComboBox * guiComboBox::withMainGeometry(ITexture ** pTex, IGeometryQuads * p
     pQuads[1] = new QuadData(1, 2, 0, 3, pTex[1]);
     pQuads[2] = new QuadData(2, 3, 0, 3, pTex[2]);
     m_pMainGeometry->build(3, pQuads);
+    QuadData::releaseQuads(3, pQuads);
 	return this;
 }
 

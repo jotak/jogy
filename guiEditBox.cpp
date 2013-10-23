@@ -569,6 +569,9 @@ bool guiEditBox::onSpecialKeyDown(InputButton key)
             }
             break;
         }
+        default:
+        	// Nothing to do on other buttons
+        	break;
         }
         i2d pos = Jogy::interface->computeCharPosInText(m_iCaretPos, m_sText, m_FontId);
         if (pos.x > getWidth() - m_iTLBorderWidth - m_iBRBorderWidth) {
@@ -576,7 +579,7 @@ bool guiEditBox::onSpecialKeyDown(InputButton key)
         } else if (pos.x + m_iXScrollPos < 0) {
             m_iXScrollPos = 0;
         }
-        if (pos.y + Jogy::interface->computeTextHeight(NULL, m_FontId) > getHeight() - m_iTLBorderHeight - m_iBRBorderHeight) {
+        if (pos.y + (int) Jogy::interface->computeTextHeight(NULL, m_FontId) > getHeight() - m_iTLBorderHeight - m_iBRBorderHeight) {
             m_iYScrollPos = (getHeight() - m_iTLBorderHeight - m_iBRBorderHeight) - pos.y - Jogy::interface->computeTextHeight(NULL, m_FontId);
         } else if (pos.y + m_iYScrollPos < 0) {
             m_iYScrollPos = 0;

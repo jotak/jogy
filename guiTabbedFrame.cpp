@@ -1,8 +1,5 @@
 #include "guiTabbedFrame.h"
 #include "guiLabel.h"
-#include "../Display/TextureEngine.h"
-#include "../Display/DisplayEngine.h"
-#include "../Input/InputEngine.h"
 
 // -----------------------------------------------------------------
 // Name : guiTabbedFrame
@@ -10,12 +7,11 @@
 // -----------------------------------------------------------------
 guiTabbedFrame::guiTabbedFrame() : guiFrame()
 {
+	m_pLabelTemplate = new guiLabel();
+    m_pUnselectedTabGeometry = NULL;
+    m_pSelectedTabGeometry = NULL;
     m_pTabsGeometry = NULL;
-    m_iXPanelDecal = 0;
-    m_FontId = (FontId)0;
-    for (int i = 0; i < 6; i++) {
-        m_pTexList[i] = NULL;
-    }
+    m_iXSpace = 0;
 }
 
 // -----------------------------------------------------------------
@@ -32,36 +28,63 @@ guiTabbedFrame::~guiTabbedFrame()
     // Now we can delete the list
     FREEVEC(m_pDocumentsList);
     FREE(m_pTabsGeometry);
+    FREE(m_pUnselectedTabGeometry);
+    FREE(m_pSelectedTabGeometry);
+    FREE(m_pLabelTemplate);
 }
 
 // -----------------------------------------------------------------
-// Name : init
+// Name : build
 // -----------------------------------------------------------------
-void guiTabbedFrame::init(Texture ** pTabTexs, FontId fontId, int xdecal, FramePosition positionType, FrameFitBehavior widthFit, FrameFitBehavior heightFit, int iMaxWidth, int iMaxHeight, Texture ** pMainTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl)
+guiTabbedFrame * guiTabbedFrame::build()
 {
-    int iSelTabHeight = pTabTexs[0]->getHeight();
-    guiFrame::init(positionType, widthFit, heightFit, 0, iSelTabHeight, iMaxWidth, iMaxHeight, pMainTexs, sCpntId, xPxl, yPxl, wPxl, hPxl);
-    memcpy(m_pTexList, pTabTexs, 6 * sizeof(Texture*));
-    m_FontId = fontId;
-    m_iXPanelDecal = xdecal;
-    computeGeometry();
+	// guiFrame init:
+	withOffset(0, m_pSelectedTabGeometry->getTexture()->getHeight());
+    guiFrame::build();
+
+    rebuildGeometry();
+
+    return this;
 }
 
 // -----------------------------------------------------------------
-// Name : clone
+// Name : withTabsGeometry
 // -----------------------------------------------------------------
-guiObject * guiTabbedFrame::clone()
+guiTabbedFrame * guiTabbedFrame::withTabsGeometry(ITexture ** pTex, IGeometryQuads * pGeo, ITexture ** pSelTex, IGeometryQuads * pSelGeo)
 {
-	Texture * frmtexs[8] = { ((GeometryQuads*)m_pGeometry)->getTexture(0), ((GeometryQuads*)m_pGeometry)->getTexture(1), ((GeometryQuads*)m_pGeometry)->getTexture(2), ((GeometryQuads*)m_pGeometry)->getTexture(3), ((GeometryQuads*)m_pGeometry)->getTexture(4), ((GeometryQuads*)m_pGeometry)->getTexture(5), ((GeometryQuads*)m_pGeometry)->getTexture(6), ((GeometryQuads*)m_pGeometry)->getTexture(7) };
-    guiTabbedFrame * pObj = new guiTabbedFrame();
-    pObj->init(m_pTexList, m_FontId, m_iXPanelDecal, m_PositionType, m_WidthFit, m_HeightFit, m_iMaxWidth, m_iMaxHeight, frmtexs, m_sCpntId, m_iXPxl, m_iYPxl, m_iWidth, m_iHeight);
-    return pObj;
+	m_pUnselectedTabGeometry = pGeo;
+	m_pSelectedTabGeometry = pSelGeo;
+
+	// Each geometry has 3 quads
+    QuadData ** pQuads = new QuadData*[3];
+    pQuads[0] = new QuadData(0, 1, 0, 3, pTex[0]);
+    pQuads[1] = new QuadData(1, 2, 0, 3, pTex[1]);
+    pQuads[2] = new QuadData(2, 3, 0, 3, pTex[2]);
+    m_pUnselectedTabGeometry->build(3, pQuads);
+    QuadData::releaseQuads(3, pQuads);
+
+    pQuads = new QuadData*[3];
+    pQuads[0] = new QuadData(0, 1, 0, 3, pSelTex[0]);
+    pQuads[1] = new QuadData(1, 2, 0, 3, pSelTex[1]);
+    pQuads[2] = new QuadData(2, 3, 0, 3, pSelTex[2]);
+    m_pSelectedTabGeometry->build(3, pQuads);
+    QuadData::releaseQuads(3, pQuads);
+	return this;
 }
 
 // -----------------------------------------------------------------
-// Name : computeGeometry
+// Name : withLabelInfo
 // -----------------------------------------------------------------
-void guiTabbedFrame::computeGeometry()
+guiTabbedFrame * guiTabbedFrame::withLabelInfo(fontid fontId, IGeometryText * pLabelGeo)
+{
+	m_pLabelTemplate->withText("", fontId, Color::black)->withGeometry(pLabelGeo);
+	return this;
+}
+
+// -----------------------------------------------------------------
+// Name : rebuildGeometry
+// -----------------------------------------------------------------
+void guiTabbedFrame::rebuildGeometry()
 {
 	int size = m_pDocumentsList.size();
     // n Quads
@@ -75,21 +98,21 @@ void guiTabbedFrame::computeGeometry()
 
     int xstart, xend, ystart, yend;
     xstart = 0;
-    yend = m_pTexList[0]->getHeight();
-    int boxWidth = (m_iWidth - 2 * m_iXPanelDecal) / size;
+    yend = m_pSelectedTabGeometry->getTexture(0)->getHeight();
+    int boxWidth = (m_iWidth - 2 * m_iXSpace) / size;
     int i = 0;
-    int iTexBase;
+    IGeometryQuads * pCurrent = NULL;
 	for (guiTabbedFrame_Document* &pDoc : m_pDocumentsList) {
         if (pDoc->m_pDoc == m_pDoc)
         {
             ystart = 0;
-            iTexBase = 0;
+            pCurrent = m_pSelectedTabGeometry;
             pDoc->m_pLabel->setDiffuseColor(Color(0.0f, 0.0f, 0.0f));
         }
         else
         {
-            ystart = yend - m_pTexList[3]->getHeight();
-            iTexBase = 3;
+            ystart = yend - m_pUnselectedTabGeometry->getTexture(0)->getHeight();
+            pCurrent = m_pUnselectedTabGeometry;
             if (pDoc->m_pDoc->didContentChange()) {
                 pDoc->m_pLabel->setDiffuseColor(Color(0.2f, 0.2f, 1.0f));
             } else {
@@ -97,22 +120,21 @@ void guiTabbedFrame::computeGeometry()
             }
         }
 
-        xend = xstart + m_pTexList[0 + iTexBase]->getWidth();
-        pQuads[i++] = new QuadData(xstart, xend, ystart, yend, m_pTexList[0 + iTexBase]);
+        xend = xstart + pCurrent->getTexture(0)->getWidth();
+        pQuads[i++] = new QuadData(xstart, xend, ystart, yend, pCurrent->getTexture(0));
         xstart = xend;
-        xend += boxWidth - m_pTexList[2 + iTexBase]->getWidth() - m_pTexList[0 + iTexBase]->getWidth();
-        pQuads[i++] = new QuadData(xstart, xend, ystart, yend, m_pTexList[1 + iTexBase]);
+        xend += boxWidth - pCurrent->getTexture(2)->getWidth() - pCurrent->getTexture(0)->getWidth();
+        pQuads[i++] = new QuadData(xstart, xend, ystart, yend, pCurrent->getTexture(1));
         xstart = xend;
-        xend += m_pTexList[2 + iTexBase]->getWidth();
-        pQuads[i++] = new QuadData(xstart, xend, ystart, yend, m_pTexList[2 + iTexBase]);
+        xend += pCurrent->getTexture(2)->getWidth();
+        pQuads[i++] = new QuadData(xstart, xend, ystart, yend, pCurrent->getTexture(2));
         xstart = xend;
     }
 
     if (m_pTabsGeometry == NULL) {
-        m_pTabsGeometry = new GeometryQuads(nQuads, pQuads, VB_Static);
-    } else {
-        m_pTabsGeometry->modify(nQuads, pQuads);
+        m_pTabsGeometry = (IGeometryQuads*) m_pUnselectedTabGeometry->clone();
     }
+    m_pTabsGeometry->build(nQuads, pQuads);
     QuadData::releaseQuads(nQuads, pQuads);
 }
 
@@ -152,7 +174,7 @@ void guiTabbedFrame::displayAt(int iXOffset, int iYOffset, Color cpntColor, Colo
 //    getDisplay()->enableBlending();
 
     int size = m_pDocumentsList.size();
-    int boxSize = (m_iWidth - 2 * m_iXPanelDecal) / size;
+    int boxSize = (m_iWidth - 2 * m_iXSpace) / size;
     if (boxSize < 50)
     {
         boxSize = 50;
@@ -160,9 +182,8 @@ void guiTabbedFrame::displayAt(int iXOffset, int iYOffset, Color cpntColor, Colo
     }
     else
     {
-        CoordsScreen coords = CoordsScreen(iXOffset + m_iXPxl + m_iXPanelDecal, iYOffset + m_iYPxl, GUIPLANE);
-        m_pTabsGeometry->display(coords, cpntColor);
-        int boxWidth = (m_iWidth - 2 * m_iXPanelDecal) / size;
+        m_pTabsGeometry->display(iXOffset + m_iXPxl + m_iXSpace, iYOffset + m_iYPxl, cpntColor);
+        int boxWidth = (m_iWidth - 2 * m_iXSpace) / size;
         int i = 0;
     	for (guiTabbedFrame_Document* &pDoc : m_pDocumentsList) {
             if (pDoc->m_pDoc == m_pDoc) {
@@ -175,8 +196,8 @@ void guiTabbedFrame::displayAt(int iXOffset, int iYOffset, Color cpntColor, Colo
                 }
             }
 
-            int xPxl = m_iXPxl + m_iXPanelDecal + i * boxWidth + (boxWidth - pDoc->m_pLabel->getWidth()) / 2;
-            int yPxl = m_iYPxl + 3 + (m_pTexList[0]->getHeight() - pDoc->m_pLabel->getHeight()) / 2;
+            int xPxl = m_iXPxl + m_iXSpace + i * boxWidth + (boxWidth - pDoc->m_pLabel->getWidth()) / 2;
+            int yPxl = m_iYPxl + 3 + (m_pSelectedTabGeometry->getTexture()->getHeight() - pDoc->m_pLabel->getHeight()) / 2;
             pDoc->m_pLabel->displayAt(iXOffset + xPxl, iYOffset + yPxl, cpntColor, docColor);
             i++;
         }
@@ -215,11 +236,11 @@ guiObject * guiTabbedFrame::onButtonEvent(ButtonAction * pEvent)
 // -----------------------------------------------------------------
 // Name : attachDocument
 // -----------------------------------------------------------------
-void guiTabbedFrame::attachDocument(guiDocument * pDoc, FrameFitBehavior OldWidthFit, FrameFitBehavior OldHeightFit)
+void guiTabbedFrame::attachDocument(guiDocument * pDoc, FrameFitBehavior oldWidthFit, FrameFitBehavior oldHeightFit)
 {
     guiFrame::setDocument(pDoc);
-    m_pDocumentsList.push_front(new guiTabbedFrame_Document(pDoc, OldWidthFit, OldHeightFit, m_FontId));
-    computeGeometry();
+    m_pDocumentsList.push_front(new guiTabbedFrame_Document(pDoc, oldWidthFit, oldHeightFit, m_pLabelTemplate));
+    rebuildGeometry();
 }
 
 // -----------------------------------------------------------------
@@ -265,7 +286,7 @@ void guiTabbedFrame::setMainDocument(guiDocument * pDoc)
     if (m_pDoc != pDoc)
     {
         m_pDoc = pDoc;
-        computeGeometry();
+        rebuildGeometry();
     }
 }
 
@@ -274,7 +295,7 @@ void guiTabbedFrame::setMainDocument(guiDocument * pDoc)
 // -----------------------------------------------------------------
 bool guiTabbedFrame::isPanelAt(int xPxl, int yPxl)
 {
-    return (xPxl >= m_iXPxl + m_iXPanelDecal && xPxl <= m_iXPxl + m_iWidth - m_iXPanelDecal && yPxl >= m_iYPxl && yPxl <= m_iYPxl + (int)m_pTexList[0]->getHeight());
+    return (xPxl >= m_iXPxl + m_iXSpace && xPxl <= m_iXPxl + m_iWidth - m_iXSpace && yPxl >= m_iYPxl && yPxl <= m_iYPxl + m_pSelectedTabGeometry->getTexture()->getHeight());
 }
 
 // -----------------------------------------------------------------
@@ -285,7 +306,7 @@ short guiTabbedFrame::getIPanel(int xPxl, int yPxl)
     if (!isPanelAt(xPxl, yPxl)) {
         return -1;
     }
-    return ((xPxl - m_iXPxl - m_iXPanelDecal) * m_pDocumentsList.size()) / (m_iWidth - 2 * m_iXPanelDecal);
+    return ((xPxl - m_iXPxl - m_iXSpace) * m_pDocumentsList.size()) / (m_iWidth - 2 * m_iXSpace);
 }
 
 // -----------------------------------------------------------------
@@ -316,13 +337,15 @@ void guiTabbedFrame::moveTo(int xPxl, int yPxl)
 // Name : guiTabbedFrame_Document
 //  Default constructor for guiTabbedFrame_Document
 // -----------------------------------------------------------------
-guiTabbedFrame_Document::guiTabbedFrame_Document(guiDocument * pDoc, FrameFitBehavior OldWidthFit, FrameFitBehavior OldHeightFit, FontId fontId)
+guiTabbedFrame_Document::guiTabbedFrame_Document(guiDocument * pDoc, FrameFitBehavior oldWidthFit, FrameFitBehavior oldHeightFit, guiLabel * tpl)
 {
     m_pDoc = pDoc;
-    m_OldWidthFit = OldWidthFit;
-    m_OldHeightFit = OldHeightFit;
+    m_OldWidthFit = oldWidthFit;
+    m_OldHeightFit = oldHeightFit;
     m_pLabel = new guiLabel();
-    m_pLabel->init(pDoc->getTitle(), fontId, Color(0,0,0), "", 0, 0, 0, 0);
+    m_pLabel->withGeometry((IGeometryText*) tpl->getGeometry()->clone())
+    		->withText(pDoc->getTitle(), tpl->getFontId(), tpl->getDiffuseColor())
+    		->build();
 }
 
 // -----------------------------------------------------------------

@@ -304,12 +304,12 @@ void guiFrame::checkPositionIfDragged()
     // Now check that it's not completly out of screen
     if (m_iXPxl + m_iWidth < 5) {
         moveTo(5 - m_iWidth, m_iYPxl);
-    } else if (m_iXPxl > Jogy::interface->getScreenWidth() - 5) {
+    } else if (m_iXPxl > (int) Jogy::interface->getScreenWidth() - 5) {
         moveTo(Jogy::interface->getScreenWidth() - 5, m_iYPxl);
     }
     if (m_iYPxl + m_iHeight < 5) {
         moveTo(m_iXPxl, 5 - m_iHeight);
-    } else if (m_iYPxl > Jogy::interface->getScreenHeight() - 5) {
+    } else if (m_iYPxl > (int) Jogy::interface->getScreenHeight() - 5) {
         moveTo(m_iXPxl, Jogy::interface->getScreenHeight() - 5);
     }
 }

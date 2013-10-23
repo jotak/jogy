@@ -1,4 +1,5 @@
 #include "jogy.h"
+#include "Geometries/IGeometryQuads.h"
 
 // -----------------------------------------------------------------
 // Name : init
