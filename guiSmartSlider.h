@@ -2,13 +2,13 @@
 #define _GUI_SMART_SLIDER_H
 
 #include "guiLabel.h"
-#include "../Geometries/GeometryQuads.h"
+#include "Geometries/IGeometryQuads.h"
 
 class guiSliderItem : public BaseObject
 {
 public:
     virtual string getInfo() { return m_sName; };
-    Texture * m_pTex;
+    ITexture * m_pTex;
     string m_sName;
     bool m_bEnabled;
     string m_sDisabledReason;
@@ -22,11 +22,10 @@ public:
     virtual ~guiSmartSlider();
 
     // Inherited functions
-    virtual void init(int iItemSize, int iSpacing, FontId fontId, Color textColor, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl);
     virtual u32 getType() { return GOTYPE_SMARTSLIDER; };
     virtual void displayAt(int iXOffset, int iYOffset, Color cpntColor, Color docColor);
 
-    // Input functions
+    // Input functionsDisabled
     virtual guiObject * onButtonEvent(ButtonAction * pEvent);
     virtual guiObject * onCursorMoveEvent(int xPxl, int yPxl);
 
@@ -40,14 +39,25 @@ public:
     void loadGeometry();
     void deleteItems();
 
+    // Builder
+    virtual guiSmartSlider * build();
+    guiSmartSlider * withMainGeometry(IGeometryQuads * pGeo);
+    guiSmartSlider * withSelectorGeometry(ITexture * pTex, IGeometryQuads * pGeo);
+    guiSmartSlider * withDisabledGeometry(ITexture * pTex, IGeometryQuads * pGeo);
+    guiSmartSlider * withItemSize(int size, int spacing) {
+    	m_iItemSize = size; m_iSpacing = spacing; return this;
+    };
+    guiSmartSlider * withLabelInfo(Color textColor, fontid fontId, IGeometryText * pLabelGeo);
+
 protected:
     list<guiSliderItem*> m_pItems;
     int m_iSpacing;
     int m_iSliderPos;
     int m_iTheoricSize;
     guiSliderItem * m_pSelectedItem;
-    GeometryQuads * m_pDisabledGeometry;
-    GeometryQuads * m_pSelectorGeometry;
+    IGeometryQuads * m_pMainGeometry;
+    IGeometryQuads * m_pDisabledGeometry;
+    IGeometryQuads * m_pSelectorGeometry;
     int m_iSelectorPos;
     guiLabel * m_pLabel;
     guiLabel * m_pDisableReasonLabel;

@@ -519,7 +519,7 @@ bool guiEditBox::onSpecialKeyDown(InputButton key)
         }
         switch (key)
         {
-        case KeyLeft:
+        case ButtonLeft:
         {
             if (Jogy::interface->isCtrlPressed()) {
                 m_iCaretPos = getStartOfWord(m_iCaretPos);
@@ -528,7 +528,7 @@ bool guiEditBox::onSpecialKeyDown(InputButton key)
             }
             break;
         }
-        case KeyRight:
+        case ButtonRight:
         {
             if (Jogy::interface->isCtrlPressed()) {
                 m_iCaretPos = getEndOfWord(m_iCaretPos);
@@ -537,21 +537,21 @@ bool guiEditBox::onSpecialKeyDown(InputButton key)
             }
             break;
         }
-        case KeyUp:
+        case ButtonUp:
         {
             i2d pos = Jogy::interface->computeCharPosInText(m_iCaretPos, m_sText, m_FontId);
             pos.y -= (Jogy::interface->computeTextHeight(NULL, m_FontId) - 1);
             m_iCaretPos = Jogy::interface->computeCharIdxInText(pos.x, pos.y, m_sText, m_FontId);
             break;
         }
-        case KeyDown:
+        case ButtonDown:
         {
             i2d pos = Jogy::interface->computeCharPosInText(m_iCaretPos, m_sText, m_FontId);
             pos.y += (Jogy::interface->computeTextHeight(NULL, m_FontId) + 1);
             m_iCaretPos = Jogy::interface->computeCharIdxInText(pos.x, pos.y, m_sText, m_FontId);
             break;
         }
-        case KeyHome:
+        case ButtonHome:
         {
             if (Jogy::interface->isCtrlPressed()) {
                 m_iCaretPos = 0;
@@ -560,7 +560,7 @@ bool guiEditBox::onSpecialKeyDown(InputButton key)
             }
             break;
         }
-        case KeyEnd:
+        case ButtonEnd:
         {
             if (Jogy::interface->isCtrlPressed()) {
                 m_iCaretPos = m_sText.length();

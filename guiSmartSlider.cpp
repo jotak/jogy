@@ -1,7 +1,5 @@
 #include "guiSmartSlider.h"
 #include "ComponentOwnerInterface.h"
-#include "../Display/DisplayEngine.h"
-#include "../Input/InputEngine.h"
 
 // -----------------------------------------------------------------
 // Name : guiSmartSlider
@@ -11,6 +9,7 @@ guiSmartSlider::guiSmartSlider() : guiComponent()
 {
     m_iSliderPos = 0;
     m_iItemSize = 0;
+    m_pMainGeometry = NULL;
     m_pDisabledGeometry = NULL;
     m_pSelectorGeometry = NULL;
     m_pSelectedItem = NULL;
@@ -26,6 +25,7 @@ guiSmartSlider::guiSmartSlider() : guiComponent()
 guiSmartSlider::~guiSmartSlider()
 {
     FREEVEC(m_pItems);
+    FREE(m_pMainGeometry);
     FREE(m_pDisabledGeometry);
     FREE(m_pSelectorGeometry);
     delete m_pLabel;
@@ -33,33 +33,63 @@ guiSmartSlider::~guiSmartSlider()
 }
 
 // -----------------------------------------------------------------
-// Name : init
+// Name : build
 // -----------------------------------------------------------------
-void guiSmartSlider::init(int iItemSize, int iSpacing, FontId fontId, Color textColor, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl)
+guiSmartSlider * guiSmartSlider::build()
 {
-    guiComponent::init(sCpntId, xPxl, yPxl, wPxl, hPxl);
-    m_pLabel->init("dummy", fontId, textColor, "", 0, 0, 0, 0);
-    m_pDisableReasonLabel->init("dummy", fontId, Color(1,0,0), "", 0, 0, 0, 0);
-    m_iSpacing = iSpacing;
-    m_iItemSize = iItemSize;
+    guiComponent::build();
 
-    QuadData quad1(0, m_iItemSize, 0, m_iItemSize, "EmptyWhiteSquare");
-    m_pSelectorGeometry = new GeometryQuads(&quad1, VB_Static);
-    QuadData quad2(0, m_iItemSize, 0, m_iItemSize, "Disabled");
-    m_pDisabledGeometry = new GeometryQuads(&quad2, VB_Static);
-
+    // Rebuild geometries with now known itemSize
     loadGeometry();
+    QuadData quad(0, m_iItemSize, 0, m_iItemSize, m_pSelectorGeometry->getTexture());
+    m_pSelectorGeometry->build(&quad);
+    QuadData quad2(0, m_iItemSize, 0, m_iItemSize, m_pDisabledGeometry->getTexture());
+    m_pDisabledGeometry->build(&quad2);
+    m_pLabel->build();
+    m_pDisableReasonLabel->build();
+
     setHeight(m_iItemSize + m_pLabel->getHeight() + 3);
+
+    return this;
 }
 
 // -----------------------------------------------------------------
-// Name : clone
+// Name : withMainGeometry
 // -----------------------------------------------------------------
-guiObject * guiSmartSlider::clone()
+guiSmartSlider * guiSmartSlider::withMainGeometry(IGeometryQuads * pGeo)
 {
-    guiSmartSlider * pObj = new guiSmartSlider();
-    pObj->init(m_iItemSize, m_iSpacing, m_pLabel->getFontId(), m_pLabel->getDiffuseColor(), m_sCpntId, m_iXPxl, m_iYPxl, m_iWidth, m_iHeight);
-    return pObj;
+    m_pMainGeometry = pGeo;
+	return this;
+}
+
+// -----------------------------------------------------------------
+// Name : withLabelInfo
+// -----------------------------------------------------------------
+guiSmartSlider * guiSmartSlider::withLabelInfo(Color textColor, fontid fontId, IGeometryText * pLabelGeo)
+{
+	m_pLabel->withText("", fontId, textColor)->withGeometry(pLabelGeo);
+	m_pDisableReasonLabel->withText("", fontId, textColor)->withGeometry((IGeometryText*)pLabelGeo->clone());
+	return this;
+}
+
+// -----------------------------------------------------------------
+// Name : withSelectorGeometry
+// -----------------------------------------------------------------
+guiSmartSlider * guiSmartSlider::withSelectorGeometry(ITexture * pTex, IGeometryQuads * pGeo) {
+    m_pSelectorGeometry = pGeo;
+    QuadData quad(0, 1, 0, 1, pTex);
+    pGeo->build(&quad);
+	return this;
+}
+
+// -----------------------------------------------------------------
+// Name : withDisabledGeometry
+// -----------------------------------------------------------------
+guiSmartSlider * guiSmartSlider::withDisabledGeometry(ITexture * pTex, IGeometryQuads * pGeo) {
+    m_pDisabledGeometry = pGeo;
+    QuadData quad(0, 1, 0, 1, pTex);
+    pGeo->build(&quad);
+	return this;
 }
 
 // -----------------------------------------------------------------
@@ -72,16 +102,17 @@ void guiSmartSlider::displayAt(int iXOffset, int iYOffset, Color cpntColor, Colo
         if (!m_bEnabled) {
             cpntColor = cpntColor * 0.3f;
         }
-        CoordsScreen coords = CoordsScreen(m_iXPxl + iXOffset + m_iSliderPos, m_iYPxl + iYOffset, GUIPLANE);
-        ((GeometryQuads*)m_pGeometry)->display(coords, cpntColor);
+        int x = m_iXPxl + iXOffset + m_iSliderPos;
+        int y = m_iYPxl + iYOffset;
+        m_pMainGeometry->display(x, y, cpntColor);
 
         // Find all disabled items
-        CoordsScreen darkCoords = coords;
+        int darkX = x;
     	for (guiSliderItem* &pItem : m_pItems) {
             if (!pItem->m_bEnabled) {
-                m_pDisabledGeometry->display(darkCoords, cpntColor);
+                m_pDisabledGeometry->display(darkX, y, cpntColor);
             }
-            darkCoords.x += m_iItemSize + m_iSpacing;
+            darkX += m_iItemSize + m_iSpacing;
         }
 
         // Draw selection-related (selector, label...)
@@ -94,10 +125,10 @@ void guiSmartSlider::displayAt(int iXOffset, int iYOffset, Color cpntColor, Colo
             }
 //      bool bWasBlending = (blendColor.a >= 0 && blendColor.a < 1);
 //      if (!bWasBlending)
-            _display->enableBlending();
+//            Jogy::interface->setBlendingMode(true);
             cpntColor = cpntColor * Color(1, 1, 1, 0.3f);
-            coords.x += m_iSelectorPos;
-            m_pSelectorGeometry->display(coords, cpntColor);
+            x += m_iSelectorPos;
+            m_pSelectorGeometry->display(x, y, cpntColor);
 //      if (!bWasBlending)
 //        getDisplay()->disableBlending();
         }
@@ -194,17 +225,13 @@ void guiSmartSlider::deleteItems()
 // -----------------------------------------------------------------
 void guiSmartSlider::loadGeometry()
 {
-	if (m_pGeometry == NULL) {
+	if (m_pMainGeometry == NULL) {
 		return;
     }
 
     m_iTheoricSize = 0;
     if (m_pItems.empty()) {
-        if (m_pGeometry == NULL) {
-            m_pGeometry = new GeometryQuads(VB_Static);
-        } else {
-            ((GeometryQuads*)m_pGeometry)->modify(0, NULL);
-        }
+    	m_pMainGeometry->build(0, NULL);
     } else {
     	int size = m_pItems.size();
         QuadData ** pQuads = new QuadData*[size];
@@ -214,11 +241,7 @@ void guiSmartSlider::loadGeometry()
             m_iTheoricSize += m_iItemSize + m_iSpacing;
             i++;
         }
-        if (m_pGeometry == NULL) {
-            m_pGeometry = new GeometryQuads(size, pQuads, VB_Static);
-        } else {
-            ((GeometryQuads*)m_pGeometry)->modify(size, pQuads);
-        }
+    	m_pMainGeometry->build(size, pQuads);
         QuadData::releaseQuads(size, pQuads);
     }
     if (m_iTheoricSize < m_iWidth) {

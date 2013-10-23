@@ -3,14 +3,15 @@
 // -----------------------------------------------------------------
 // Name : guiList
 // -----------------------------------------------------------------
-guiList::guiList() : EventListener(0), m_TextColor(1,1,1,1)
+guiList::guiList()
 {
     m_pSelectionGeometry = NULL;
-    m_FontId = 0;
+    m_bHasSelection = false;
     m_bHasFocus = false;
     m_pLastSelectedLabel = NULL;
     m_bCatchMouseUp = false;
     m_ActionOnSelection = (InputButton)0;
+    m_pLabelTemplate = new guiLabel();
 }
 
 // -----------------------------------------------------------------
@@ -23,16 +24,26 @@ guiList::~guiList()
         onFocusLost();
     }
     FREE(m_pSelectionGeometry);
+    FREE(m_pLabelTemplate);
 }
 
 // -----------------------------------------------------------------
-// Name : init
+// Name : build
 // -----------------------------------------------------------------
-void guiList::init(fontid fontId, Color textColor, ITexture ** pMainTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl)
-{
-    guiContainer::init(FB_FitDocumentToFrameWhenSmaller, FB_FitDocumentToFrameWhenSmaller, 0, 0, 0, 0, pMainTexs, sCpntId, xPxl, yPxl, wPxl, hPxl);
-    m_FontId = fontId;
-    m_TextColor = textColor;
+guiList * guiList::build() {
+	withFrameFitBehavior(FB_FitDocumentToFrameWhenSmaller, FB_FitDocumentToFrameWhenSmaller);
+    guiContainer::build();
+    return this;
+}
+
+// -----------------------------------------------------------------
+// Name : withSelectionGeometry
+// -----------------------------------------------------------------
+guiList * guiList::withSelectionGeometry(ITexture * pTex, IGeometryQuads * pGeo) {
+    m_pSelectionGeometry = pGeo;
+    QuadData quad(0, 1, 0, 1, pTex);
+    pGeo->build(&quad);
+	return this;
 }
 
 // -----------------------------------------------------------------
@@ -46,7 +57,7 @@ void guiList::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color docCo
 
     guiContainer::displayAt(iXOffset, iYOffset, cpntColor, docColor);
 
-    if (m_pSelectionGeometry != NULL)
+    if (m_bHasSelection)
     {
         // display selection
         m_pStencilGeometry->fillStencil(m_iInnerXPxl + iXOffset, m_iInnerYPxl + iYOffset, true);
@@ -99,7 +110,7 @@ bool guiList::onCatchButtonEvent(ButtonAction * pEvent)
         }
         if (pClicked != NULL)
         {
-            if (_input->isShiftPressed()) {
+            if (Jogy::interface->isShiftPressed()) {
                 shiftSelect(pClicked);
             } else {
         		for (list<guiComponent*>::iterator it = lstCpnt.begin(); it != lstCpnt.end(); ++it) {
@@ -163,9 +174,9 @@ bool guiList::onButtonEvent(ButtonAction * pEvent, guiComponent * pCpnt)
         }
 
         guiListLabel * pClickedLabel = (guiListLabel*) pCpnt;
-        if (pEvent->eButton == Button1 && _input->isShiftPressed()) {
+        if (pEvent->eButton == Button1 && Jogy::interface->isShiftPressed()) {
             shiftSelect(pClickedLabel);
-        } else if ((pEvent->eButton == Button1 && _input->isCtrlPressed()) || pEvent->eButton == Button2) {
+        } else if ((pEvent->eButton == Button1 && Jogy::interface->isCtrlPressed()) || pEvent->eButton == Button2) {
             // Add/remove current label to/from selection
             pClickedLabel->setSelected(!pClickedLabel->isSelected());
             updateSelectionGeometry();
@@ -249,11 +260,8 @@ void guiList::shiftSelect(guiListLabel * pClickedLabel)
 void guiList::onFocusLost()
 {
     m_bHasFocus = false;
-    _input->unsetKeyboardListener(this);
-    EventListener * p = _input->popUncursoredEventListener();
-    if (p != this && p != NULL) { // oops
-    	_input->pushUncursoredEventListener(p);
-    }
+    Jogy::interface->unregisterKeyboardListener(this);
+    Jogy::interface->unregisterUncursoredEventListener(this);
 }
 
 // -----------------------------------------------------------------
@@ -292,11 +300,11 @@ void guiList::updateSelectionGeometry()
     }
 
     // Get or load texture
-    Texture * texture = (m_pSelectionGeometry == NULL) ? _tex->loadTexture("EmptyWhiteSquare") : m_pSelectionGeometry->getTexture();
+    ITexture * texture = m_pSelectionGeometry->getTexture();
     if (nSelLabels == 0)
     {
         // Exit
-        FREE(m_pSelectionGeometry);
+    	m_bHasSelection = false;
         m_pLastSelectedLabel = NULL;
         return;
     }
@@ -311,11 +319,8 @@ void guiList::updateSelectionGeometry()
         }
     }
 
-    if (m_pSelectionGeometry == NULL) {
-        m_pSelectionGeometry = new GeometryQuads(nSelLabels, pQuads, VB_Static);
-    } else {
-        m_pSelectionGeometry->modify(nSelLabels, pQuads);
-    }
+	m_bHasSelection = true;
+	m_pSelectionGeometry->build(nSelLabels, pQuads);
     QuadData::releaseQuads(nSelLabels, pQuads);
 }
 
@@ -325,8 +330,8 @@ void guiList::updateSelectionGeometry()
 void guiList::setFocus()
 {
     m_bHasFocus = true;
-    _input->setKeyboardListener(this);
-    _input->pushUncursoredEventListener(this);
+    Jogy::interface->registerKeyboardListener(this);
+    Jogy::interface->registerUncursoredEventListener(this);
 }
 
 // -----------------------------------------------------------------
@@ -372,7 +377,12 @@ guiList::guiListLabel * guiList::addItem(string sText, string sId)
     guiComponent * pCpnt = *(getDocument()->getComponents().rbegin());
     int yPxl = (pCpnt == NULL) ? 0 : pCpnt->getYPos() + pCpnt->getHeight();
     guiListLabel * pLbl = new guiListLabel();
-    pLbl->init(sText, m_FontId, m_TextColor, sId, 5, yPxl, m_iInnerWidth - 10, 0);
+    pLbl->withText(sText, m_pLabelTemplate->getFontId(), m_pLabelTemplate->getDiffuseColor())
+    		->withGeometry((IGeometryText*)m_pLabelTemplate->getGeometry()->clone())
+    		->withCpntId(sId)
+    		->withDimensions(m_iInnerWidth - 10, 0)
+    		->withPosition(5, yPxl)
+    		->build();
     getDocument()->addComponent(pLbl);
     getDocument()->setHeight(yPxl + pLbl->getHeight());
     return pLbl;
@@ -395,6 +405,16 @@ void guiList::removeSelection()
         }
     }
     updateSelectionGeometry();
+}
+
+// -----------------------------------------------------------------
+// Name : pickActionOnSelection
+// -----------------------------------------------------------------
+InputButton guiList::pickActionOnSelection()
+{
+    InputButton action = m_ActionOnSelection;
+    m_ActionOnSelection = (InputButton)0;
+    return action;
 }
 
 // -----------------------------------------------------------------

@@ -15,12 +15,12 @@ enum InputButton
     Button2,
     ButtonX,
     ButtonZ,
-    KeyLeft,
-    KeyRight,
-    KeyUp,
-    KeyDown,
-    KeyHome,
-    KeyEnd
+    ButtonLeft,
+    ButtonRight,
+    ButtonUp,
+    ButtonDown,
+    ButtonHome,
+    ButtonEnd
 };
 
 enum ButtonEvent

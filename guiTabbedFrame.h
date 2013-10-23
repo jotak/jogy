@@ -3,12 +3,11 @@
 
 #include "guiFrame.h"
 #include "guiLabel.h"
-#include "../Geometries/IGeometryQuads.h"
 
 class guiTabbedFrame_Document : public BaseObject
 {
 public:
-    guiTabbedFrame_Document(guiDocument * pDoc, FrameFitBehavior OldWidthFit, FrameFitBehavior OldHeightFit, FontId fontId);
+    guiTabbedFrame_Document(guiDocument * pDoc, FrameFitBehavior OldWidthFit, FrameFitBehavior OldHeightFit, fontid fontId);
     virtual ~guiTabbedFrame_Document();
     guiDocument * m_pDoc;
     guiLabel * m_pLabel;
@@ -44,7 +43,7 @@ public:
     virtual void moveTo(int xPxl, int yPxl);
 
     // Member access
-    void setFontId(FontId id) { m_FontId = id; };
+    void setFontId(fontid id) { m_FontId = id; };
     void setPanelXDecal(int xdecal) { m_iXPanelDecal = xdecal; };
 
     // Clone / init
@@ -52,10 +51,10 @@ public:
 
 protected:
     list<guiTabbedFrame_Document*> m_pDocumentsList;
-    GeometryQuads * m_pTabsGeometry;
+    IGeometryQuads * m_pTabsGeometry;
     int m_iXPanelDecal;
-    FontId m_FontId;
-    Texture * m_pTexList[6];
+    fontid m_FontId;
+    //Texture * m_pTexList[6];
 
 private:
     void computeGeometry();

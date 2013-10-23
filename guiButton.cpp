@@ -199,7 +199,7 @@ void guiButton::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color doc
         }
         bool bPrevMode = false;
         if (bAddMode) {
-            bPrevMode = Jogy::interface->setAdditive(true);
+            bPrevMode = Jogy::interface->setAdditiveMode(true);
         }
         pGeoToDisplay->display(iXOffset, iYOffset, cpntColor * docColor);
         m_pLabel->displayAt(iXOffset, iYOffset, cpntColor, docColor);
@@ -207,7 +207,7 @@ void guiButton::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color doc
             m_pGeometryAttachedImage->display(m_iXPxl + iXOffset, m_iYPxl + iYOffset, cpntColor * m_DiffuseColor);
         }
         if (bAddMode) {
-        	Jogy::interface->setAdditive(bPrevMode);
+        	Jogy::interface->setAdditiveMode(bPrevMode);
         }
         if (bNeedPop) {
         	Jogy::interface->popMatrix();

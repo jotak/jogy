@@ -4,7 +4,7 @@
 #include "guiContainer.h"
 #include "guiLabel.h"
 
-class guiList : public guiContainer, public KeyboardListener, public EventListener
+class guiList : public guiContainer
 {
 public:
     // class guiListLabel
@@ -56,21 +56,13 @@ public:
     virtual bool onButtonEvent(ButtonAction * pEvent, guiComponent * pCpnt);
 
     // Member access
-    fontid getFontId() { return m_FontId; };
-    void setFontId(fontid id) { m_FontId = id; };
-    void setTextColor(Color textColor) { m_TextColor = textColor; };
-    Color getTextColor() { return m_TextColor; };
-    InputButton getActionOnSelection()
-    {
-        InputButton action = m_ActionOnSelection;
-        m_ActionOnSelection = (InputButton)0;
-        return action;
-    };
+    fontid getFontId() { return m_pLabelTemplate->getFontId(); };
+    void setFontId(fontid id) { m_pLabelTemplate->setFontId(id); };
+    Color getTextColor() { return m_pLabelTemplate->getDiffuseColor(); };
+    void setTextColor(Color textColor) { m_pLabelTemplate->setDiffuseColor(textColor); };
+    InputButton pickActionOnSelection();
     guiListLabel * getLastSelectedLabel() { return m_pLastSelectedLabel; };
     bool hasFocus() { return m_bHasFocus; };
-
-    // Clone / init
-    virtual void init(fontid fontId, Color textColor, ITexture ** pMainTexs, string sCpntId, int xPxl, int yPxl, int wPxl, int hPxl);
 
     // Other
     void setFocus();
@@ -83,17 +75,22 @@ public:
     void sort();
     bool sortCompare(BaseObject * A, BaseObject * B);
 
-    // Static default constructors
-    static guiList * createDefaultList(int width, int height, string sId);
+    // Builder
+    virtual guiList * build();
+    guiList * withLabelInfo(Color textColor, fontid fontId, IGeometryText * pLabelGeo) {
+    	m_pLabelTemplate->withText("", fontId, textColor)->withGeometry(pLabelGeo);
+    	return this;
+    }
+    guiList * withSelectionGeometry(ITexture * pTex, IGeometryQuads * pGeo);
 
 protected:
     void updateSelectionGeometry();
     void shiftSelect(guiListLabel * pClickedLabel);
 
     IGeometryQuads * m_pSelectionGeometry;
-    fontid m_FontId;
-    Color m_TextColor;
+    bool m_bHasSelection;
     bool m_bHasFocus;
+    guiLabel * m_pLabelTemplate;
     guiListLabel * m_pLastSelectedLabel;
     bool m_bCatchMouseUp;
     InputButton m_ActionOnSelection;

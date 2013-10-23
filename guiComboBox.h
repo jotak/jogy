@@ -44,9 +44,8 @@ public:
     // Builder
     virtual guiComboBox * build();
     guiComboBox * withMainGeometry(ITexture ** pTex, IGeometryQuads * pGeo);
-    guiComboBox * withTextStyle(Color textColor, fontid fontId, IGeometryText * pLabelGeo) {
-    	m_pLabel->withText("", fontId, textColor);
-    	m_pListButtonTemplate->withLabel("", fontId, textColor, pLabelGeo);
+    guiComboBox * withLabelInfo(Color textColor, fontid fontId, IGeometryText * pLabelGeo) {
+    	m_pLabel->withText("", fontId, textColor)->withGeometry(pLabelGeo);
     	return this;
     }
     guiComboBox * withMaxListDimensions(int w, int h) {
@@ -62,6 +61,10 @@ public:
     }
     guiComboBox * withListButtonGeometry(ITexture * pTex, IGeometryQuads * pGeo) {
     	m_pListButtonTemplate->withBaseGeometry(pTex, pGeo); return this;
+    }
+    guiComboBox * withListButtonLabelInfo(Color textColor, fontid fontId, IGeometryText * pLabelGeo) {
+    	m_pListButtonTemplate->withLabel("", fontId, textColor, pLabelGeo);
+    	return this;
     }
     guiComboBox * withListButtonHoverGeometry(ITexture * pTex, IGeometryQuads * pGeo) {
     	m_pListButtonTemplate->withHoverGeometry(pTex, pGeo); return this;

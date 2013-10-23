@@ -13,7 +13,8 @@ public:
     virtual void translate(float x, float y, float z) = 0;
     virtual void scale(float x, float y, float z) = 0;
     virtual Vertex screenTransform(int x, int y) = 0;
-    virtual bool setAdditive(bool) = 0;
+    virtual bool setAdditiveMode(bool) = 0;
+    virtual bool setBlendingMode(bool) = 0;
     virtual string wrapText(string text, unsigned boxWidth, fontid font) = 0;
     virtual unsigned computeTextWidth(string text, fontid font) = 0;
     virtual unsigned computeTextHeight(string text, fontid font) = 0;
@@ -25,6 +26,8 @@ public:
     virtual int computeCharIdxInText(int x, int y, string text, fontid font) = 0;
     virtual void registerKeyboardListener(guiObject*) = 0;
     virtual void unregisterKeyboardListener(guiObject*) = 0;
+    virtual void registerUncursoredEventListener(guiObject*) = 0;
+    virtual void unregisterUncursoredEventListener(guiObject*) = 0;
     virtual bool isShiftPressed() = 0;
     virtual bool isCtrlPressed() = 0;
 };
