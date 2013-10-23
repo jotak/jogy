@@ -16,7 +16,7 @@ public:
     // Inherited functions
     virtual u32 getType() { return GOTYPE_EDITBOX; };
     virtual bool onKeyDown(unsigned char c);
-    virtual bool onSpecialKeyDown(int key);
+    virtual bool onSpecialKeyDown(InputButton key);
 
     // Update / display
     virtual void update(double delta);
@@ -82,8 +82,10 @@ protected:
     int m_iYScrollPos;
     int m_iSelectionStart;
     int m_iSelectionEnd;
-    int m_iXInnerOffset;
-    int m_iYInnerOffset;
+    int m_iTLBorderWidth;
+    int m_iTLBorderHeight;
+    int m_iBRBorderWidth;
+    int m_iBRBorderHeight;
 
 private:
     void rebuildMainGeometry();

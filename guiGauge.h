@@ -2,6 +2,7 @@
 #define _GUI_GAUGE_H
 
 #include "guiComponent.h"
+#include "Geometries/IGeometryQuads.h"
 
 class guiGauge : public guiComponent
 {

@@ -1,6 +1,7 @@
 #include "guiLabel.h"
 #include "Geometries/IGeometryText.h"
 #include "ComponentOwnerInterface.h"
+#include "jogy.h"
 
 // -----------------------------------------------------------------
 // Name : guiLabel
@@ -78,7 +79,7 @@ void guiLabel::computeGeometry()
     }
     setWidth(Jogy::interface->computeTextWidth(m_sText, m_FontId));
     setHeight(Jogy::interface->computeTextHeight(m_sText, m_FontId));
-    m_pGeometry->setText(m_sText, m_FontId;
+    m_pGeometry->setText(m_sText, m_FontId);
 }
 
 // -----------------------------------------------------------------

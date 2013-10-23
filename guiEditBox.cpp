@@ -22,8 +22,10 @@ guiEditBox::guiEditBox() : m_TextColor(1.0f, 1.0f, 1.0f, 1.0f)
     m_bMultiLines = false;
     m_iSelectionEnd = 0;
     m_pMainGeometry = NULL;
-    m_iXInnerOffset = 0;
-    m_iYInnerOffset = 0;
+    m_iTLBorderWidth = 0;
+    m_iTLBorderHeight = 0;
+    m_iBRBorderWidth = 0;
+    m_iBRBorderHeight = 0;
 }
 
 // -----------------------------------------------------------------
@@ -31,7 +33,7 @@ guiEditBox::guiEditBox() : m_TextColor(1.0f, 1.0f, 1.0f, 1.0f)
 //  Destructor
 // -----------------------------------------------------------------
 guiEditBox::~guiEditBox() {
-    _input->unsetKeyboardListener(this);
+	Jogy::interface->unregisterKeyboardListener(this);
     FREE(m_pStencilGeometry);
     FREE(m_pTextGeometry);
     FREE(m_pCaretGeometry);
@@ -54,9 +56,14 @@ guiEditBox * guiEditBox::build() {
 
     rebuildMainGeometry();
 
+    // Set borders dimension variables
     ITexture * pTex = m_pMainGeometry->getTexture(0);
-    m_iXInnerOffset = pTex->getWidth();
-    m_iYInnerOffset = pTex->getHeight();
+    m_iTLBorderWidth = pTex->getWidth();
+    m_iTLBorderHeight = pTex->getHeight();
+
+    pTex = m_pMainGeometry->getTexture(8);
+    m_iBRBorderWidth = pTex->getWidth();
+    m_iBRBorderHeight = pTex->getHeight();
 
     return this;
 }
@@ -179,8 +186,8 @@ void guiEditBox::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color do
     int y = m_iYPxl + iYOffset;
     m_pMainGeometry->display(x, y, cpntColor);
 
-    x += m_iXInnerOffset;
-    y += m_iYInnerOffset;
+    x += m_iTLBorderWidth;
+    y += m_iTLBorderHeight;
     int xStencil = x;
     int yStencil = y;
 
@@ -201,7 +208,7 @@ void guiEditBox::displayAt(int iXOffset, int iYOffset, Color cpntColor, Color do
 
     if (m_bHasFocus && m_fBlinkTimer >= 0) {
     	// Display caret
-    	i2d pos = Jogy::interface->getCharPosInText(m_iCaretPos, m_sText, m_FontId);
+    	i2d pos = Jogy::interface->computeCharPosInText(m_iCaretPos, m_sText, m_FontId);
     	m_pCaretGeometry->display(x + pos.x, y + pos.y, cpntColor);
     }
     m_pStencilGeometry->fillStencil(xStencil, yStencil, false);
@@ -258,24 +265,22 @@ guiObject * guiEditBox::onButtonEvent(ButtonAction * pEvent)
 void guiEditBox::onButton1Down(int xPxl, int yPxl)
 {
     m_bHasFocus = true;
-    _input->setKeyboardListener(this);
+	Jogy::interface->registerKeyboardListener(this);
     deselect();
 
-    ITexture * pTex1 = m_pMainGeometry->getTexture(0);
-    ITexture * pTex2 = m_pMainGeometry->getTexture(8);
-    m_iCaretPos = Jogy::interface->getCharIdxInText(xPxl - m_iXPxl - pTex1->getWidth(),
-    		yPxl - m_iYPxl - pTex1->getHeight(),
+    m_iCaretPos = Jogy::interface->computeCharIdxInText(xPxl - m_iXPxl - m_iTLBorderWidth,
+    		yPxl - m_iYPxl - m_iTLBorderHeight,
     		m_sText, m_FontId);
 
-    i2d pos = Jogy::interface->getCharPosInText(m_iCaretPos, m_sText, m_FontId);
-    if (pos.x > getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) {
-        m_iXScrollPos = (getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) - pos.x - 4;
+    i2d pos = Jogy::interface->computeCharPosInText(m_iCaretPos, m_sText, m_FontId);
+    if (pos.x > getWidth() - m_iTLBorderWidth - m_iBRBorderWidth) {
+        m_iXScrollPos = (getWidth() - m_iTLBorderWidth - m_iBRBorderWidth) - pos.x - 4;
     } else if (pos.x + m_iXScrollPos < 0) {
         m_iXScrollPos = 0;
     }
     int fontHeight = Jogy::interface->computeTextHeight(NULL, m_FontId);
-    if (pos.y + fontHeight > getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) {
-        m_iYScrollPos = (getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) - pos.y - fontHeight;
+    if (pos.y + fontHeight > getHeight() - m_iTLBorderHeight - m_iBRBorderHeight) {
+        m_iYScrollPos = (getHeight() - m_iTLBorderHeight - m_iBRBorderHeight) - pos.y - fontHeight;
     } else if (pos.y + m_iYScrollPos < 0) {
         m_iYScrollPos = 0;
     }
@@ -291,10 +296,8 @@ void guiEditBox::onButton1Drag(int xPxl, int yPxl)
         m_iSelectionStart = m_iSelectionEnd = m_iCaretPos;
     }
     int oldCaretPos = m_iCaretPos;
-    ITexture * pTex1 = m_pMainGeometry->getTexture(0);
-    ITexture * pTex2 = m_pMainGeometry->getTexture(8);
-    m_iCaretPos = Jogy::interface->getCharIdxInText(xPxl - m_iXPxl - pTex1->getWidth(),
-    		yPxl - m_iYPxl - pTex1->getHeight(),
+    m_iCaretPos = Jogy::interface->computeCharIdxInText(xPxl - m_iXPxl - m_iTLBorderWidth,
+    		yPxl - m_iYPxl - m_iTLBorderHeight,
     		m_sText, m_FontId);
 
     if (oldCaretPos != m_iCaretPos) {
@@ -323,15 +326,15 @@ void guiEditBox::onButton1Drag(int xPxl, int yPxl)
                 updateSelectionGeometry();
             }
         }
-        i2d pos = Jogy::interface->getCharPosInText(m_iCaretPos, m_sText, m_FontId);
-        if (pos.x > getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) {
-            m_iXScrollPos = (getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) - pos.x - 4;
+        i2d pos = Jogy::interface->computeCharPosInText(m_iCaretPos, m_sText, m_FontId);
+        if (pos.x > getWidth() - m_iTLBorderWidth - m_iBRBorderWidth) {
+            m_iXScrollPos = (getWidth() - m_iTLBorderWidth - m_iBRBorderWidth) - pos.x - 4;
         } else if (pos.x + m_iXScrollPos < 0) {
             m_iXScrollPos = 0;
         }
         int fontHeight = Jogy::interface->computeTextHeight(NULL, m_FontId);
-        if (pos.y + fontHeight > getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) {
-            m_iYScrollPos = (getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) - pos.y - fontHeight;
+        if (pos.y + fontHeight > getHeight() - m_iTLBorderHeight - m_iBRBorderHeight) {
+            m_iYScrollPos = (getHeight() - m_iTLBorderHeight - m_iBRBorderHeight) - pos.y - fontHeight;
         } else if (pos.y + m_iYScrollPos < 0) {
             m_iYScrollPos = 0;
         }
@@ -349,17 +352,15 @@ void guiEditBox::onButton1DoubleClick(int xPxl, int yPxl)
     if (m_iSelectionEnd != m_iSelectionStart) {
         updateSelectionGeometry();
     }
-    ITexture * pTex1 = m_pMainGeometry->getTexture(0);
-    ITexture * pTex2 = m_pMainGeometry->getTexture(8);
-    i2d pos = Jogy::interface->getCharPosInText(m_iCaretPos, m_sText, m_FontId);
-    if (pos.x > getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) {
-        m_iXScrollPos = (getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) - pos.x - 4;
+    i2d pos = Jogy::interface->computeCharPosInText(m_iCaretPos, m_sText, m_FontId);
+    if (pos.x > getWidth() - m_iTLBorderWidth - m_iBRBorderWidth) {
+        m_iXScrollPos = (getWidth() - m_iTLBorderWidth - m_iBRBorderWidth) - pos.x - 4;
     } else if (pos.x + m_iXScrollPos < 0) {
         m_iXScrollPos = 0;
     }
     int fontHeight = Jogy::interface->computeTextHeight(NULL, m_FontId);
-    if (pos.y + fontHeight > getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) {
-        m_iYScrollPos = (getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) - pos.y - fontHeight;
+    if (pos.y + fontHeight > getHeight() - m_iTLBorderHeight - m_iBRBorderHeight) {
+        m_iYScrollPos = (getHeight() - m_iTLBorderHeight - m_iBRBorderHeight) - pos.y - fontHeight;
     } else if (pos.y + m_iYScrollPos < 0) {
         m_iYScrollPos = 0;
     }
@@ -372,7 +373,7 @@ void guiEditBox::onButton1DoubleClick(int xPxl, int yPxl)
 void guiEditBox::onFocusLost()
 {
     m_bHasFocus = false;
-    _input->unsetKeyboardListener(this);
+	Jogy::interface->unregisterKeyboardListener(this);
 }
 
 // -----------------------------------------------------------------
@@ -382,7 +383,7 @@ bool guiEditBox::onKeyDown(unsigned char c)
 {
     if (m_bHasFocus)
     {
-        if (_input->isCtrlPressed())
+        if (Jogy::interface->isCtrlPressed())
         {
             if (c == 22 || c == 24 || c == 3) // Ctrl+c/v/x : copy/paste/cut ; TODO : does it work in other systems?
             {
@@ -483,17 +484,15 @@ bool guiEditBox::onKeyDown(unsigned char c)
             }
             m_iCaretPos++;
         }
-        ITexture * pTex1 = m_pMainGeometry->getTexture(0);
-        ITexture * pTex2 = m_pMainGeometry->getTexture(8);
-        i2d pos = Jogy::interface->getCharPosInText(m_iCaretPos, m_sText, m_FontId);
-        if (pos.x > getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) {
-            m_iXScrollPos = (getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) - pos.x - 4;
+        i2d pos = Jogy::interface->computeCharPosInText(m_iCaretPos, m_sText, m_FontId);
+        if (pos.x > getWidth() - m_iTLBorderWidth - m_iBRBorderWidth) {
+            m_iXScrollPos = (getWidth() - m_iTLBorderWidth - m_iBRBorderWidth) - pos.x - 4;
         } else if (pos.x + m_iXScrollPos < 0) {
             m_iXScrollPos = 0;
         }
         int fontHeight = Jogy::interface->computeTextHeight(NULL, m_FontId);
-        if (pos.y + fontHeight > getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) {
-            m_iYScrollPos = (getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) - pos.y - fontHeight;
+        if (pos.y + fontHeight > getHeight() - m_iTLBorderHeight - m_iBRBorderHeight) {
+            m_iYScrollPos = (getHeight() - m_iTLBorderHeight - m_iBRBorderHeight) - pos.y - fontHeight;
         } else if (pos.y + m_iYScrollPos < 0) {
             m_iYScrollPos = 0;
         }
@@ -506,11 +505,11 @@ bool guiEditBox::onKeyDown(unsigned char c)
 // -----------------------------------------------------------------
 // Name : onSpecialKeyDown
 // -----------------------------------------------------------------
-bool guiEditBox::onSpecialKeyDown(int key)
+bool guiEditBox::onSpecialKeyDown(InputButton key)
 {
     if (m_bHasFocus) {
         int oldCaretPos = -1;
-        if (_input->isShiftPressed()) {
+        if (Jogy::interface->isShiftPressed()) {
             if (!hasSelectedText()) {
                 m_iSelectionStart = m_iSelectionEnd = m_iCaretPos;
             }
@@ -518,53 +517,52 @@ bool guiEditBox::onSpecialKeyDown(int key)
         } else {
         	deselect();
         }
-        CoordsScreen cs;
         switch (key)
         {
-        case SPECKEY_LEFT:
+        case KeyLeft:
         {
-            if (_input->isCtrlPressed()) {
+            if (Jogy::interface->isCtrlPressed()) {
                 m_iCaretPos = getStartOfWord(m_iCaretPos);
             } else {
                 m_iCaretPos = max(m_iCaretPos-1, 0);
             }
             break;
         }
-        case SPECKEY_RIGHT:
+        case KeyRight:
         {
-            if (_input->isCtrlPressed()) {
+            if (Jogy::interface->isCtrlPressed()) {
                 m_iCaretPos = getEndOfWord(m_iCaretPos);
             } else {
                 m_iCaretPos = min((unsigned)(m_iCaretPos+1), m_sText.length());
             }
             break;
         }
-        case SPECKEY_UP:
+        case KeyUp:
         {
-            cs = _font->getCharacterPosition(m_iCaretPos, m_sText, m_aiAllFonts[(int)m_FontId]);
-            cs.y -= (_font->getFontHeight(m_aiAllFonts[(int)m_FontId]) - 1);
-            m_iCaretPos = _font->getCharacterPosition(cs, m_sText, m_aiAllFonts[(int)m_FontId]);
+            i2d pos = Jogy::interface->computeCharPosInText(m_iCaretPos, m_sText, m_FontId);
+            pos.y -= (Jogy::interface->computeTextHeight(NULL, m_FontId) - 1);
+            m_iCaretPos = Jogy::interface->computeCharIdxInText(pos.x, pos.y, m_sText, m_FontId);
             break;
         }
-        case SPECKEY_DOWN:
+        case KeyDown:
         {
-            cs = _font->getCharacterPosition(m_iCaretPos, m_sText, m_aiAllFonts[(int)m_FontId]);
-            cs.y += _font->getFontHeight(m_aiAllFonts[(int)m_FontId]) + 1;
-            m_iCaretPos = _font->getCharacterPosition(cs, m_sText, m_aiAllFonts[(int)m_FontId]);
+            i2d pos = Jogy::interface->computeCharPosInText(m_iCaretPos, m_sText, m_FontId);
+            pos.y += (Jogy::interface->computeTextHeight(NULL, m_FontId) + 1);
+            m_iCaretPos = Jogy::interface->computeCharIdxInText(pos.x, pos.y, m_sText, m_FontId);
             break;
         }
-        case SPECKEY_HOME:
+        case KeyHome:
         {
-            if (_input->isCtrlPressed()) {
+            if (Jogy::interface->isCtrlPressed()) {
                 m_iCaretPos = 0;
             } else {
                 m_iCaretPos = getStartOfLine(m_iCaretPos);
             }
             break;
         }
-        case SPECKEY_END:
+        case KeyEnd:
         {
-            if (_input->isCtrlPressed()) {
+            if (Jogy::interface->isCtrlPressed()) {
                 m_iCaretPos = m_sText.length();
             } else {
                 m_iCaretPos = getEndOfLine(m_iCaretPos);
@@ -572,17 +570,15 @@ bool guiEditBox::onSpecialKeyDown(int key)
             break;
         }
         }
-        Texture * pTex1 = ((GeometryQuads*)m_pGeometry)->getTexture(0);
-        Texture * pTex2 = ((GeometryQuads*)m_pGeometry)->getTexture(8);
-        cs = _font->getCharacterPosition(m_iCaretPos, m_sText, m_aiAllFonts[(int)m_FontId]);
-        if (cs.x > getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) {
-            m_iXScrollPos = (getWidth() - (int)pTex1->getWidth() - (int)pTex2->getWidth()) - cs.x - 4;
-        } else if (cs.x + m_iXScrollPos < 0) {
+        i2d pos = Jogy::interface->computeCharPosInText(m_iCaretPos, m_sText, m_FontId);
+        if (pos.x > getWidth() - m_iTLBorderWidth - m_iBRBorderWidth) {
+            m_iXScrollPos = (getWidth() - m_iTLBorderWidth - m_iBRBorderWidth) - pos.x - 4;
+        } else if (pos.x + m_iXScrollPos < 0) {
             m_iXScrollPos = 0;
         }
-        if (cs.y + _font->getFontHeight(m_aiAllFonts[(int)m_FontId]) > getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) {
-            m_iYScrollPos = (getHeight() - (int)pTex1->getHeight() - (int)pTex2->getHeight()) - cs.y - _font->getFontHeight(m_aiAllFonts[(int)m_FontId]);
-        } else if (cs.y + m_iYScrollPos < 0) {
+        if (pos.y + Jogy::interface->computeTextHeight(NULL, m_FontId) > getHeight() - m_iTLBorderHeight - m_iBRBorderHeight) {
+            m_iYScrollPos = (getHeight() - m_iTLBorderHeight - m_iBRBorderHeight) - pos.y - Jogy::interface->computeTextHeight(NULL, m_FontId);
+        } else if (pos.y + m_iYScrollPos < 0) {
             m_iYScrollPos = 0;
         }
         m_fBlinkTimer = 0;
@@ -628,7 +624,7 @@ void guiEditBox::setText(string sText)
     }
     m_sText = sText;
     if (m_pTextGeometry != NULL) {
-        ((GeometryText*)m_pTextGeometry)->setText(m_sText, m_aiAllFonts[(int)m_FontId]);
+        m_pTextGeometry->setText(m_sText, m_FontId);
     }
 }
 
@@ -642,20 +638,12 @@ void guiEditBox::onResize(int iOldWidth, int iOldHeight)
         return;
     }
     // Main geometry (borders & background)
-    if (m_pGeometry != NULL)
-    {
-        Texture * texlist[9] = { ((GeometryQuads*)m_pGeometry)->getTexture(0), ((GeometryQuads*)m_pGeometry)->getTexture(1), ((GeometryQuads*)m_pGeometry)->getTexture(2), ((GeometryQuads*)m_pGeometry)->getTexture(3), ((GeometryQuads*)m_pGeometry)->getTexture(4), ((GeometryQuads*)m_pGeometry)->getTexture(5), ((GeometryQuads*)m_pGeometry)->getTexture(6), ((GeometryQuads*)m_pGeometry)->getTexture(7), ((GeometryQuads*)m_pGeometry)->getTexture(8) };
-        QuadData ** pQuads;
-        int nQuads = computeQuadsList(&pQuads, texlist);
-        ((GeometryQuads*)m_pGeometry)->modify(nQuads, pQuads);
-        QuadData::releaseQuads(nQuads, pQuads);
+    if (m_pMainGeometry != NULL) {
+    	rebuildMainGeometry();
     }
     // Stencil
-    if (m_pStencilGeometry != NULL)
-    {
-        Texture * pTex1 = ((GeometryQuads*)m_pGeometry)->getTexture(0);
-        Texture * pTex2 = ((GeometryQuads*)m_pGeometry)->getTexture(8);
-        m_pStencilGeometry->resize(m_iWidth - (int)pTex1->getWidth() - (int)pTex2->getWidth(), m_iHeight - (int)pTex1->getHeight() - (int)pTex2->getHeight());
+    if (m_pStencilGeometry != NULL) {
+        m_pStencilGeometry->build(m_iWidth - m_iTLBorderWidth - m_iBRBorderWidth, m_iHeight - m_iTLBorderHeight - m_iBRBorderHeight);
     }
 }
 
@@ -672,34 +660,28 @@ void guiEditBox::updateSelectionGeometry()
         }
     }
 
-    Texture * texture = (m_pSelectionGeometry == NULL) ? _tex->loadTexture("EmptyWhiteSquare") : m_pSelectionGeometry->getTexture();
+    ITexture * texture = m_pSelectionGeometry->getTexture();
     QuadData ** pQuads = new QuadData*[nbSelLines];
 
     // Upper-left quad 1
-    CoordsScreen cs1 = _font->getCharacterPosition(m_iSelectionStart, m_sText, m_aiAllFonts[(int)m_FontId]);
-    CoordsScreen cs2;
+    i2d p1 = Jogy::interface->computeCharPosInText(m_iSelectionStart, m_sText, m_FontId);
+    i2d p2;
     int iQuad = 0;
-    for (int i = m_iSelectionStart; i < m_iSelectionEnd; i++)
-    {
-        if (m_sText[i] == '\n')
-        {
-            cs2 = _font->getCharacterPosition(i, m_sText, m_aiAllFonts[(int)m_FontId]);
-            cs2.y += _font->getFontHeight(m_aiAllFonts[(int)m_FontId]);
-            pQuads[iQuad] = new QuadData(cs1.x, cs2.x, cs1.y, cs2.y, texture);
+    for (int i = m_iSelectionStart; i < m_iSelectionEnd; i++) {
+        if (m_sText[i] == '\n') {
+            p2 = Jogy::interface->computeCharPosInText(i, m_sText, m_FontId);
+            p2.y += Jogy::interface->computeTextHeight(NULL, m_FontId);
+            pQuads[iQuad] = new QuadData(p1.x, p2.x, p1.y, p2.y, texture);
             iQuad++;
-            cs1.x = 0;
-            cs1.y = cs2.y;
+            p1.x = 0;
+            p1.y = p2.y;
         }
     }
-    cs2 = _font->getCharacterPosition(m_iSelectionEnd, m_sText, m_aiAllFonts[(int)m_FontId]);
-    cs2.y += _font->getFontHeight(m_aiAllFonts[(int)m_FontId]);
-    pQuads[iQuad] = new QuadData(cs1.x, cs2.x, cs1.y, cs2.y, texture);
+    p2 = Jogy::interface->computeCharPosInText(m_iSelectionEnd, m_sText, m_FontId);
+    p2.y += Jogy::interface->computeTextHeight(NULL, m_FontId);
+    pQuads[iQuad] = new QuadData(p1.x, p2.x, p1.y, p2.y, texture);
 
-    if (m_pSelectionGeometry == NULL) {
-        m_pSelectionGeometry = new GeometryQuads(nbSelLines, pQuads, VB_Static);
-    } else {
-        m_pSelectionGeometry->modify(nbSelLines, pQuads);
-    }
+    m_pSelectionGeometry->build(nbSelLines, pQuads);
     QuadData::releaseQuads(nbSelLines, pQuads);
 }
 
@@ -864,7 +846,7 @@ int guiEditBox::getEndOfLine(int caretpos)
 void guiEditBox::setFocus()
 {
     m_bHasFocus = true;
-    _input->setKeyboardListener(this);
+	Jogy::interface->registerKeyboardListener(this);
 }
 
 //// -----------------------------------------------------------------

@@ -1,5 +1,4 @@
 #include "guiGauge.h"
-#include "../Geometries/IGeometryQuads.h"
 
 // -----------------------------------------------------------------
 // Name : guiGauge

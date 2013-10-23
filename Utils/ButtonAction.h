@@ -14,7 +14,13 @@ enum InputButton
     Button1 = 0,
     Button2,
     ButtonX,
-    ButtonZ
+    ButtonZ,
+    KeyLeft,
+    KeyRight,
+    KeyUp,
+    KeyDown,
+    KeyHome,
+    KeyEnd
 };
 
 enum ButtonEvent
@@ -35,9 +41,6 @@ public:
     int xPos, yPos;
     int xPosInit, yPosInit;
     int xOffset, yOffset;
-//    unsigned long dragDistance;
-//    double clickTime;
-//    EventListener * pTargetListener;
 };
 
 #endif /* BUTTONACTION_H_ */

@@ -21,8 +21,12 @@ public:
     virtual unsigned getScreenHeight() = 0;
     virtual void displayFront(guiObject*, int, int, Color, Color) = 0;
     virtual void cancelDisplayFront(guiObject*) = 0;
-    virtual i2d getCharPosInText(int idx, string text, fontid font) = 0;
-    virtual int getCharIdxInText(int x, int y, string text, fontid font) = 0;
+    virtual i2d computeCharPosInText(int idx, string text, fontid font) = 0;
+    virtual int computeCharIdxInText(int x, int y, string text, fontid font) = 0;
+    virtual void registerKeyboardListener(guiObject*) = 0;
+    virtual void unregisterKeyboardListener(guiObject*) = 0;
+    virtual bool isShiftPressed() = 0;
+    virtual bool isCtrlPressed() = 0;
 };
 
 #endif

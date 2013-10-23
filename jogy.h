@@ -21,8 +21,8 @@ public:
 
 	class Resources {
 	public:
-	    IGeometryQuads * pStickGeo;
-	    IGeometryQuads * pStickedGeo;
+	    static IGeometryQuads * pStickGeo;
+	    static IGeometryQuads * pStickedGeo;
 	};
 };
 
