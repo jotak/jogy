@@ -1,5 +1,10 @@
 #include "jogy.h"
-#include "Geometries/IGeometryQuads.h"
+
+using namespace jogy;
+
+IGeometryQuads * Resources::pScrollButtons[] = {NULL, NULL, NULL, NULL};
+int Resources::iScrollButtonWidth = 0;
+int Resources::iScrollButtonHeight = 0;
 
 // -----------------------------------------------------------------
 // Name : init
@@ -9,15 +14,37 @@ void Jogy::init(IGameInterface * interface,
 		IGeometryQuads * pStickGeo,
 		ITexture * pStickTex,
 		IGeometryQuads * pStickedGeo,
-		ITexture * pStickedTex) {
+		ITexture * pStickedTex,
+		IGeometryQuads ** scrollGeometries,
+		ITexture ** scrollTextures) {
 
 	Jogy::interface = interface;
-	Jogy::Resources::pStickGeo = pStickGeo;
-	Jogy::Resources::pStickedGeo = pStickedGeo;
+	Resources::pStickGeo = pStickGeo;
+	Resources::pStickedGeo = pStickedGeo;
     QuadData quad(0, 15, 0, 15, pStickTex/*"stick"*/);
     pStickGeo->build(&quad);
     QuadData quad2(0, 15, 0, 15, pStickedTex/*"sticked"*/);
     pStickedGeo->build(&quad2);
+
+    for (int i = 0; i < 4; i++) {
+    	Resources::pScrollButtons[i] = scrollGeometries[i];
+    }
+
+    // Initialize static data
+    ITexture * pTex = *scrollTextures;
+    QuadData quadTop(0, pTex->getWidth(), 0, pTex->getHeight(), pTex);
+    Resources::pScrollButtons[0]->build(&quadTop);
+    Resources::iScrollButtonWidth = pTex->getWidth();
+    Resources::iScrollButtonHeight = pTex->getHeight();
+    pTex++;
+    QuadData quadBottom(0, pTex->getWidth(), 0, pTex->getHeight(), pTex);
+    Resources::pScrollButtons[1]->build(&quadBottom);
+    pTex++;
+    QuadData quadLeft(0, pTex->getWidth(), 0, pTex->getHeight(), pTex);
+    Resources::pScrollButtons[2]->build(&quadLeft);
+    pTex++;
+    QuadData quadRight(0, pTex->getWidth(), 0, pTex->getHeight(), pTex);
+    Resources::pScrollButtons[3]->build(&quadRight);
 }
 
 // -----------------------------------------------------------------
@@ -26,7 +53,10 @@ void Jogy::init(IGameInterface * interface,
 // -----------------------------------------------------------------
 void Jogy::destroy() {
 
-	delete Jogy::interface;
-	FREE(Jogy::Resources::pStickGeo);
-	FREE(Jogy::Resources::pStickedGeo);
+	FREE(Jogy::interface);
+	FREE(Resources::pStickGeo);
+	FREE(Resources::pStickedGeo);
+    for (int i = 0; i < 4; i++) {
+        FREE(Resources::pScrollButtons[i]);
+    }
 }

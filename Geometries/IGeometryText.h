@@ -3,6 +3,8 @@
 
 #include "IGeometry.h"
 
+namespace jogy {
+
 class IGeometryText : public IGeometry
 {
 public:
@@ -19,5 +21,6 @@ protected:
     u8 m_uFontId;
     float m_fScale;
 };
+}
 
 #endif

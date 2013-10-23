@@ -3,6 +3,8 @@
 // -----------------------------------------------------------------
 #include "IGeometryText.h"
 
+namespace jogy {
+
 // -----------------------------------------------------------------
 // Name : IGeometryText
 //  Constructor
@@ -30,4 +32,5 @@ IGeometryText::~IGeometryText()
 void IGeometryText::reload()
 {
 	setText(m_sText, m_uFontId);
+}
 }

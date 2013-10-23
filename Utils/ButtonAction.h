@@ -5,9 +5,10 @@
  *      Author: jotak
  */
 
-#ifndef BUTTONACTION_H_
-#define BUTTONACTION_H_
+#ifndef JOGY_BUTTONACTION_H_
+#define JOGY_BUTTONACTION_H_
 
+namespace jogy {
 
 enum InputButton
 {
@@ -25,22 +26,24 @@ enum InputButton
 
 enum ButtonEvent
 {
-    Event_None = 0,
-    Event_Down,
-    Event_Up,
-    Event_Click,
-    Event_DoubleClick,
-    Event_Drag
+    EventNone = 0,
+    EventDown,
+    EventUp,
+    EventClick,
+    EventDoubleClick,
+    EventDrag
 };
 
 class ButtonAction
 {
 public:
-    InputButton eButton;
-    ButtonEvent eEvent;
+	InputButton eButton;
+	ButtonEvent eEvent;
     int xPos, yPos;
     int xPosInit, yPosInit;
     int xOffset, yOffset;
 };
+
+} // namespace
 
 #endif /* BUTTONACTION_H_ */

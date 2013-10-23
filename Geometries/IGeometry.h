@@ -3,6 +3,8 @@
 
 #include "../Utils/BaseObject.h"
 
+namespace jogy {
+
 #pragma pack(push, 1)
 class Vertex
 {
@@ -25,10 +27,11 @@ public:
     virtual ~IGeometry() {};
 
     virtual void update(double delta) = 0;
-    virtual void display(int x, int y, Color color) = 0;
+    virtual void display(int x, int y, jogy::Color color) = 0;
     virtual void reload() = 0;
     virtual void reloadGmem() = 0;
     virtual IGeometry * clone() = 0;
 };
+}
 
 #endif

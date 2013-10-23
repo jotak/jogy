@@ -3,6 +3,8 @@
 
 #include "IGeometry.h"
 
+namespace jogy {
+
 class IStencilGeometry : public IGeometry
 {
 public:
@@ -17,5 +19,6 @@ private:
     int m_iWidth, m_iHeight;
     Vertex m_Vertices[4];
 };
+}
 
 #endif

@@ -4,6 +4,8 @@
 #include "IStencilGeometry.h"
 #include "../jogy.h"
 
+namespace jogy {
+
 // -----------------------------------------------------------------
 // Name : IStencilGeometry
 //  Constructor
@@ -43,4 +45,5 @@ void IStencilGeometry::build(int iWidth, int iHeight)
 void IStencilGeometry::reload()
 {
 	build(m_iWidth, m_iHeight);
+}
 }

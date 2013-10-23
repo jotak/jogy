@@ -1,78 +1,79 @@
-#include "EffectComeIn.h"
+#include "FrameMouseFocus.h"
 #include "../GUI/Frame.h"
-#include "../jogy.h"
 
 namespace jogy {
 
 // -----------------------------------------------------------------
-// Name : EffectComeIn
+// Name : FrameMouseFocus
 //  Constructor
 // -----------------------------------------------------------------
-EffectComeIn::EffectComeIn(u16 uEffectId, float fDuration) : FrameEffect(uEffectId, EFFECT_ACTIVATE_ON_FINISHED)
+FrameMouseFocus::FrameMouseFocus(u16 uEffectId, float fFadeOutTime) : FrameEffect(uEffectId)
 {
-    m_fTimer = m_fTotalTime = fDuration;
+    m_fTimer = m_fTotalTime = fFadeOutTime;
 }
 
 // -----------------------------------------------------------------
-// Name : ~EffectComeIn
+// Name : ~FrameMouseFocus
 //  Destructor
 // -----------------------------------------------------------------
-EffectComeIn::~EffectComeIn()
+FrameMouseFocus::~FrameMouseFocus()
 {
 }
 
 // -----------------------------------------------------------------
 // Name : onBeginDisplay
 // -----------------------------------------------------------------
-void EffectComeIn::onBeginDisplay(int iXOffset, int iYOffset, Color * cpntColor, Color * docColor)
+void FrameMouseFocus::onBeginDisplay(int iXOffset, int iYOffset, Color * cpntColor, Color * docColor)
 {
-    float coef = m_fTimer / m_fTotalTime;
-    int yPxl = coef * (iYOffset + m_pFrame->getYPos() + m_pFrame->getHeight());
-
-    // Translate
-    Jogy::interface->pushMatrix();
-    Jogy::interface->translate(0, -yPxl, 0.0f);
-
+    if (!m_pFrame->isEnabled()) {
+        return;
+    }
     // Fading
-    Color color(1, 1, 1, coef);
-    cpntColor->multiply(&color);
+    Color color(1, 1, 1, 0.4f + 0.6f * m_fTimer / m_fTotalTime);
     docColor->multiply(&color);
 }
 
 // -----------------------------------------------------------------
 // Name : onEndDisplay
 // -----------------------------------------------------------------
-void EffectComeIn::onEndDisplay()
+void FrameMouseFocus::onEndDisplay()
 {
-    Jogy::interface->popMatrix();
 }
 
 // -----------------------------------------------------------------
 // Name : onUpdate
 // -----------------------------------------------------------------
-void EffectComeIn::onUpdate(double delta)
+void FrameMouseFocus::onUpdate(double delta)
 {
-    m_fTimer -= delta;
-    if (m_fTimer <= 0)
+//  if (!m_pFrame->isFocused())
+//  {
+    if (m_pFrame->isPointed())
     {
-        m_fTimer = 0;
-        m_bActive = false;
-        m_bFinished = true;
+        m_fTimer += delta;
+        if (m_fTimer > m_fTotalTime)
+            m_fTimer = m_fTotalTime;
     }
+    else
+    {
+        m_fTimer -= delta;
+        if (m_fTimer < 0)
+            m_fTimer = 0;
+    }
+//  }
 }
 
 // -----------------------------------------------------------------
 // Name : clone
 // -----------------------------------------------------------------
-EffectComeIn * EffectComeIn::clone()
+FrameMouseFocus * FrameMouseFocus::clone()
 {
-    return new EffectComeIn(m_uEffectId, m_fTotalTime);
+    return new FrameMouseFocus(m_uEffectId, m_fTotalTime);
 }
 
 // -----------------------------------------------------------------
 // Name : reset
 // -----------------------------------------------------------------
-void EffectComeIn::reset()
+void FrameMouseFocus::reset()
 {
     FrameEffect::reset();
     m_fTimer = m_fTotalTime;

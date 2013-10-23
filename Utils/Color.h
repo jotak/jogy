@@ -1,5 +1,7 @@
-#ifndef _COLOR_H
-#define _COLOR_H
+#ifndef _JOGY_COLOR_H
+#define _JOGY_COLOR_H
+
+namespace jogy {
 
 class Color
 {
@@ -109,5 +111,7 @@ public:
     static const Color blue;
     static const Color black;
 };
+
+} // namespace
 
 #endif

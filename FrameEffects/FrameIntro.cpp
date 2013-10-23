@@ -1,56 +1,53 @@
-#include "EffectComeIn.h"
-#include "../GUI/Frame.h"
+#include "FrameIntro.h"
 #include "../jogy.h"
 
 namespace jogy {
 
 // -----------------------------------------------------------------
-// Name : EffectComeIn
+// Name : FrameIntro
 //  Constructor
 // -----------------------------------------------------------------
-EffectComeIn::EffectComeIn(u16 uEffectId, float fDuration) : FrameEffect(uEffectId, EFFECT_ACTIVATE_ON_FINISHED)
+FrameIntro::FrameIntro(u16 uEffectId, float fIntroTime) : FrameEffect(uEffectId, EFFECT_ACTIVATE_ON_FINISHED)
 {
-    m_fTimer = m_fTotalTime = fDuration;
+    m_fTimer = m_fTotalTime = fIntroTime;
 }
 
 // -----------------------------------------------------------------
-// Name : ~EffectComeIn
+// Name : ~FrameIntro
 //  Destructor
 // -----------------------------------------------------------------
-EffectComeIn::~EffectComeIn()
+FrameIntro::~FrameIntro()
 {
 }
 
 // -----------------------------------------------------------------
 // Name : onBeginDisplay
 // -----------------------------------------------------------------
-void EffectComeIn::onBeginDisplay(int iXOffset, int iYOffset, Color * cpntColor, Color * docColor)
+void FrameIntro::onBeginDisplay(int iXOffset, int iYOffset, Color * cpntColor, Color * docColor)
 {
-    float coef = m_fTimer / m_fTotalTime;
-    int yPxl = coef * (iYOffset + m_pFrame->getYPos() + m_pFrame->getHeight());
+    float coef = max(1 - m_fTimer / m_fTotalTime, 0.001f); // must not be 0
 
-    // Translate
+    // Scaling
+    Vertex fCenter = Jogy::interface->screenTransform(
+                           iXOffset + m_pFrame->getXPos() + m_pFrame->getWidth() / 2,
+                           iYOffset + m_pFrame->getYPos() + m_pFrame->getHeight() / 2);
     Jogy::interface->pushMatrix();
-    Jogy::interface->translate(0, -yPxl, 0.0f);
-
-    // Fading
-    Color color(1, 1, 1, coef);
-    cpntColor->multiply(&color);
-    docColor->multiply(&color);
+    Jogy::interface->translate(fCenter.x * (1 - coef), fCenter.y * (1 - coef), 0.0f);
+    Jogy::interface->scale(coef, coef, 1.0f);
 }
 
 // -----------------------------------------------------------------
 // Name : onEndDisplay
 // -----------------------------------------------------------------
-void EffectComeIn::onEndDisplay()
+void FrameIntro::onEndDisplay()
 {
-    Jogy::interface->popMatrix();
+	Jogy::interface->popMatrix();
 }
 
 // -----------------------------------------------------------------
 // Name : onUpdate
 // -----------------------------------------------------------------
-void EffectComeIn::onUpdate(double delta)
+void FrameIntro::onUpdate(double delta)
 {
     m_fTimer -= delta;
     if (m_fTimer <= 0)
@@ -64,15 +61,16 @@ void EffectComeIn::onUpdate(double delta)
 // -----------------------------------------------------------------
 // Name : clone
 // -----------------------------------------------------------------
-EffectComeIn * EffectComeIn::clone()
+FrameIntro * FrameIntro::clone()
 {
-    return new EffectComeIn(m_uEffectId, m_fTotalTime);
+    FrameIntro * pClone = new FrameIntro(m_uEffectId, m_fTotalTime);
+    return pClone;
 }
 
 // -----------------------------------------------------------------
 // Name : reset
 // -----------------------------------------------------------------
-void EffectComeIn::reset()
+void FrameIntro::reset()
 {
     FrameEffect::reset();
     m_fTimer = m_fTotalTime;

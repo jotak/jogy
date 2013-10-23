@@ -2,6 +2,9 @@
 // IGeometryQuads
 // -----------------------------------------------------------------
 #include "IGeometryQuads.h"
+#include "../jogy.h"
+
+namespace jogy {
 
 // -----------------------------------------------------------------
 // Name : IGeometryQuads
@@ -77,4 +80,25 @@ ITexture * IGeometryQuads::getTexture(int iQuad)
 void IGeometryQuads::setTexture(ITexture * pTex, int iQuad)
 {
     m_pAllQuads[iQuad]->pTexture = pTex;
+}
+
+// -----------------------------------------------------------------
+// Name : QuadData
+//  Constructor
+// -----------------------------------------------------------------
+QuadData::QuadData(int xstart, int xend, int ystart, int yend, ITexture * pTexture) {
+	vStart = Jogy::interface->screenTransform(xstart, ystart);
+	vEnd = Jogy::interface->screenTransform(xend, yend);
+	this->pTexture = pTexture;
+}
+
+// -----------------------------------------------------------------
+// Name : QuadData
+//  Constructor
+// -----------------------------------------------------------------
+QuadData::QuadData(Vertex vStart, Vertex vEnd, ITexture * pTexture) {
+	this->vStart = vStart;
+	this->vEnd = vEnd;
+	this->pTexture = pTexture;
+}
 }

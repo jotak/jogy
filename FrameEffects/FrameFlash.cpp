@@ -1,56 +1,53 @@
-#include "EffectComeIn.h"
+#include "FrameFlash.h"
 #include "../GUI/Frame.h"
-#include "../jogy.h"
+
+#define FLASH_SPEED           8.0f       // flashes / sec
 
 namespace jogy {
 
 // -----------------------------------------------------------------
-// Name : EffectComeIn
+// Name : FrameFlash
 //  Constructor
 // -----------------------------------------------------------------
-EffectComeIn::EffectComeIn(u16 uEffectId, float fDuration) : FrameEffect(uEffectId, EFFECT_ACTIVATE_ON_FINISHED)
+FrameFlash::FrameFlash(u16 uEffectId, float fFlashTime) : FrameEffect(uEffectId, EFFECT_REMOVE_ON_FINISHED)
 {
-    m_fTimer = m_fTotalTime = fDuration;
+    m_fTimer = m_fTotalTime = fFlashTime;
 }
 
 // -----------------------------------------------------------------
-// Name : ~EffectComeIn
+// Name : ~FrameFlash
 //  Destructor
 // -----------------------------------------------------------------
-EffectComeIn::~EffectComeIn()
+FrameFlash::~FrameFlash()
 {
 }
 
 // -----------------------------------------------------------------
 // Name : onBeginDisplay
 // -----------------------------------------------------------------
-void EffectComeIn::onBeginDisplay(int iXOffset, int iYOffset, Color * cpntColor, Color * docColor)
+void FrameFlash::onBeginDisplay(int iXOffset, int iYOffset, Color * cpntColor, Color * docColor)
 {
-    float coef = m_fTimer / m_fTotalTime;
-    int yPxl = coef * (iYOffset + m_pFrame->getYPos() + m_pFrame->getHeight());
-
-    // Translate
-    Jogy::interface->pushMatrix();
-    Jogy::interface->translate(0, -yPxl, 0.0f);
-
-    // Fading
-    Color color(1, 1, 1, coef);
-    cpntColor->multiply(&color);
-    docColor->multiply(&color);
+    float timesec = m_fTimer - (int) m_fTimer;
+    int i = (int) (FLASH_SPEED * timesec);
+    if (i%2)
+    {
+    	Color c(1.0f, 0.6f, 0.3f, 0.7f);
+        cpntColor->multiply(&c);
+        docColor->multiply(&c);
+    }
 }
 
 // -----------------------------------------------------------------
 // Name : onEndDisplay
 // -----------------------------------------------------------------
-void EffectComeIn::onEndDisplay()
+void FrameFlash::onEndDisplay()
 {
-    Jogy::interface->popMatrix();
 }
 
 // -----------------------------------------------------------------
 // Name : onUpdate
 // -----------------------------------------------------------------
-void EffectComeIn::onUpdate(double delta)
+void FrameFlash::onUpdate(double delta)
 {
     m_fTimer -= delta;
     if (m_fTimer <= 0)
@@ -64,15 +61,15 @@ void EffectComeIn::onUpdate(double delta)
 // -----------------------------------------------------------------
 // Name : clone
 // -----------------------------------------------------------------
-EffectComeIn * EffectComeIn::clone()
+FrameFlash * FrameFlash::clone()
 {
-    return new EffectComeIn(m_uEffectId, m_fTotalTime);
+    return new FrameFlash(m_uEffectId, m_fTotalTime);
 }
 
 // -----------------------------------------------------------------
 // Name : reset
 // -----------------------------------------------------------------
-void EffectComeIn::reset()
+void FrameFlash::reset()
 {
     FrameEffect::reset();
     m_fTimer = m_fTotalTime;

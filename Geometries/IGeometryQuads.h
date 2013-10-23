@@ -3,21 +3,14 @@
 
 #include "IGeometry.h"
 #include "../Utils/ITexture.h"
-#include "../jogy.h"
+
+namespace jogy {
 
 class QuadData
 {
 public:
-    QuadData(int xstart, int xend, int ystart, int yend, ITexture * pTexture) {
-    	vStart = Jogy::interface->screenTransform(xstart, ystart);
-    	vEnd = Jogy::interface->screenTransform(xend, yend);
-    	this->pTexture = pTexture;
-    }
-    QuadData(Vertex vStart, Vertex vEnd, ITexture * pTexture) {
-    	this->vStart = vStart;
-    	this->vEnd = vEnd;
-    	this->pTexture = pTexture;
-    }
+    QuadData(int xstart, int xend, int ystart, int yend, ITexture * pTexture);
+    QuadData(Vertex vStart, Vertex vEnd, ITexture * pTexture);
 
     static void releaseQuads(int nQuads, QuadData ** pQuads) {
         for (int i = 0; i < nQuads; i++) {
@@ -51,5 +44,6 @@ protected:
     int m_iNbQuads;
     QuadData ** m_pAllQuads;
 };
+}
 
 #endif
